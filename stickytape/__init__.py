@@ -64,7 +64,6 @@ def _transform_import(import_line, sys_path):
         ))
         with open(import_target.absolute_path) as imported_module_file:
             output.append(_body(imported_module_file, sys_path))
-    print "".join(output)
     return "".join(output)
     
 def _read_possible_import_targets(import_line, sys_paths):
@@ -84,7 +83,6 @@ def _read_possible_import_targets(import_line, sys_paths):
     ]
     
     valid_import_targets = [target for target in import_targets if target is not None]
-    print valid_import_targets
     if len(valid_import_targets) > 0:
         return valid_import_targets
     else:
@@ -105,7 +103,7 @@ def _string_escape(string):
     return "'''{0}'''".format(codecs.getencoder("string_escape")(string)[0])
 
 # TODO: fill out, either by hand or generatively
-_stdlib_modules = ["argparse", "hashlib", "os", "sys"]
+_stdlib_modules = ["argparse", "codecs", "hashlib", "os", "os/path", "re", "sys"]
 
 def _is_stlib_import(import_line):
     return import_line.import_path in _stdlib_modules
