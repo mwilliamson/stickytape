@@ -9,8 +9,12 @@ def script(path, python_paths=[]):
     
     output.append(_read_shebang(path))
     output.append(_prelude())
-    output.append("    " + _body(path, sys_path).replace("\n", "\n    "))
+    output.append(_generate_module_writers(path, sys_path))
+    output.append(_indent(open(path).read()))
     return "".join(output)
+
+def _indent(string):
+    return "    " + string.replace("\n", "\n    ")
 
 def _read_shebang(path):
     with open(path) as script_file:
@@ -21,27 +25,15 @@ def _prelude():
     with open(prelude_path) as prelude_file:
         return prelude_file.read()
 
-def _body(script_file_path, sys_path):
-    with open(script_file_path) as script_file:
+def _generate_module_writers(python_file_path, sys_path):
+    with open(python_file_path) as python_file:
         module_writing_output = []
-        original_body_output = []
-        for line in script_file:
-            original_body_output.append(line)
+        for line in python_file:
             module_writer = _transform_line(line, sys_path)
             if module_writer is not None:
                 module_writing_output.extend(module_writer)
         
-        body_output = module_writing_output + original_body_output
-        return "".join(body_output)
-
-def _generate_module_writers(python_file, sys_path):
-    module_writing_output = []
-    for line in python_file:
-        module_writer = _transform_line(line, sys_path)
-        if module_writer is not None:
-            module_writing_output.extend(module_writer)
-    
-    return "".join(module_writing_output)
+        return "".join(module_writing_output)
     
 
 def _transform_line(line, sys_path):
@@ -69,12 +61,11 @@ def _transform_import(import_line, sys_path):
     output = []
     
     for import_target in import_targets:
-        output.append( "__stickytape_write_module({0}, {1})\n".format(
+        output.append( "    __stickytape_write_module({0}, {1})\n".format(
             _string_escape(import_target.module_path),
             _string_escape(import_target.source)
         ))
-        with open(import_target.absolute_path) as imported_module_file:
-            output.append(_generate_module_writers(imported_module_file, sys_path))
+        output.append(_generate_module_writers(import_target.absolute_path, sys_path))
     return "".join(output)
     
 def _read_possible_import_targets(import_line, sys_paths):
