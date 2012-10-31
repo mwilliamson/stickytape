@@ -53,6 +53,13 @@ def can_import_value_from_module_using_from_import_syntax():
     )
         
 @istest
+def can_import_multiple_values_from_module_using_from_import_syntax():
+    test_script_output(
+        script_path="script_using_from_to_import_multiple_values/hello",
+        expected_output="Hello\n"
+    )
+        
+@istest
 def can_import_module_from_package_using_from_import_syntax():
     test_script_output(
         script_path="script_using_from_to_import_module/hello",

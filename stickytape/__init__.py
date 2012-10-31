@@ -49,7 +49,7 @@ def _read_import_line(line):
     if result:
         return ImportLine(result.group(1).replace(".", "/"), None)
     
-    result = re.match("^from " + package_pattern +" import ([^\s.]+)$", line.strip())
+    result = re.match("^from " + package_pattern +" import ([^\s.]+(?:\s*,\s*[^\s.]+)*)$", line.strip())
     if result:
         return ImportLine(result.group(1).replace(".", "/"), result.group(2))
     
