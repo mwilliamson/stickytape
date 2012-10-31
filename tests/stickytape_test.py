@@ -39,6 +39,13 @@ def script_that_imports_local_package_is_converted_to_single_file():
     )
         
 @istest
+def can_import_module_from_package():
+    test_script_output(
+        script_path="script_using_module_in_package/hello",
+        expected_output="Hello\n"
+    )
+        
+@istest
 def can_import_value_from_module_using_from_import_syntax():
     test_script_output(
         script_path="script_with_single_local_from_import/hello",
