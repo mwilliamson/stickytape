@@ -18,6 +18,13 @@ def single_file_script_still_works():
         output = subprocess.check_output([script_file_path])
         assert_equal("Hello\n", output)
 
+@istest
+def stdlib_imports_are_not_modified():
+    result = stickytape.stick(find_script("single_file_using_stdlib/hello"))
+    with _temporary_script(result) as script_file_path:
+        output = subprocess.check_output([script_file_path])
+        assert_equal("f7ff9e8b7bb2e09b70935a5d785e0cc5d9d0abf0\n", output)
+
 def find_script(path):
     return os.path.join(test_script_root, path)
 
