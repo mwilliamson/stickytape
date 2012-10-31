@@ -7,14 +7,16 @@ def script(path, python_paths=[]):
     
     sys_path = [os.path.dirname(path)] + python_paths
     
+    output.append(_read_shebang(path))
+    
     with open(path) as script_file:
-        output.append(_shebang(script_file))
         output.append(_prelude())
         output.append("    " + "".join(_body(script_file, sys_path)).replace("\n", "\n    "))
         return "".join(output)
 
-def _shebang(script_file):
-    return script_file.readline()
+def _read_shebang(path):
+    with open(path) as script_file:
+        return script_file.readline()
     
 def _prelude():
     prelude_path = os.path.join(os.path.dirname(__file__), "prelude.py")
