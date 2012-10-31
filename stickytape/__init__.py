@@ -11,7 +11,6 @@ def script(path):
         _add_shebang(script_file, output)
         _add_prelude(script_file, output)
         _add_body(script_file, output, sys_path)
-        print "".join(output)
         return "".join(output)
 
 def _add_shebang(script_file, output):
