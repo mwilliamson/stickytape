@@ -33,6 +33,16 @@ def _body(script_file, sys_path):
     body_output = module_writing_output + original_body_output
     return "".join(body_output)
 
+def _generate_module_writers(python_file, sys_path):
+    module_writing_output = []
+    for line in python_file:
+        module_writer = _transform_line(line, sys_path)
+        if module_writer is not None:
+            module_writing_output.extend(module_writer)
+    
+    return "".join(module_writing_output)
+    
+
 def _transform_line(line, sys_path):
     import_line = _read_import_line(line)
     if import_line is None or _is_stlib_import(import_line):
@@ -63,7 +73,7 @@ def _transform_import(import_line, sys_path):
             _string_escape(import_target.source)
         ))
         with open(import_target.absolute_path) as imported_module_file:
-            output.append(_body(imported_module_file, sys_path))
+            output.append(_generate_module_writers(imported_module_file, sys_path))
     return "".join(output)
     
 def _read_possible_import_targets(import_line, sys_paths):
