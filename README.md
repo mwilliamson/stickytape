@@ -9,3 +9,8 @@ directories to search using the `--add-python-path` argument. For instance:
 Or to output directly to a file:
 
 ```stickytape scripts/blah --add-python-path . --output-file /tmp/blah-standalone```
+
+You can also point stickytape towards a Python binary that it should use sys.path
+from, for instance the Python binary inside a virtualenv:
+
+```stickytape scripts/blah --python-binary _virtualenv/bin/python --output-file /tmp/blah-standalone```
