@@ -5,3 +5,7 @@ depends into a single-file Python script. You can tell stickytape which
 directories to search using the `--add-python-path` argument. For instance:
 
 ```stickytape scripts/blah --add-python-path . > /tmp/blah-standalone```
+
+Or to output directly to a file:
+
+```stickytape scripts/blah --add-python-path . --output-file /tmp/blah-standalone```
