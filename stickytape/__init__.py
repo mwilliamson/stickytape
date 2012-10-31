@@ -44,14 +44,15 @@ def _transform_line(line, sys_path):
         return _transform_import(import_line, sys_path)
         
 def _read_import_line(line):
-    package_pattern = "([^\s.]+(?:\.[^\s.]+)*)"
+    package_pattern = r"([^\s.]+(?:\.[^\s.]+)*)"
     result = re.match("^import " + package_pattern + "$", line.strip())
     if result:
-        return ImportLine(result.group(1).replace(".", "/"), None)
+        return ImportLine(result.group(1).replace(".", "/"), [])
     
-    result = re.match("^from " + package_pattern +" import ([^\s.]+(?:\s*,\s*[^\s.]+)*)$", line.strip())
+    result = re.match("^from " + package_pattern + r" import ([^\s.]+(?:\s*,\s*[^\s.]+)*)$", line.strip())
     if result:
-        return ImportLine(result.group(1).replace(".", "/"), result.group(2))
+        items = re.split(r"\s*,\s*", result.group(2))
+        return ImportLine(result.group(1).replace(".", "/"), items)
     
     return None
 
@@ -73,10 +74,10 @@ def _read_possible_import_targets(import_line, sys_paths):
         import_line.import_path + ".py",
         os.path.join(import_line.import_path, "__init__.py")
     ]
-    if import_line.item is not None:
+    for item in import_line.items:
         possible_module_paths += [
-            os.path.join(import_line.import_path, import_line.item + ".py"),
-            os.path.join(import_line.import_path, import_line.item, "__init__.py")
+            os.path.join(import_line.import_path, item + ".py"),
+            os.path.join(import_line.import_path, item, "__init__.py")
         ]
     
     import_targets = [
@@ -117,7 +118,7 @@ class ImportTarget(object):
         self.source = source
 
 class ImportLine(object):
-    def __init__(self, import_path, item):
+    def __init__(self, import_path, items):
         self.import_path = import_path
-        self.item = item
+        self.items = items
         

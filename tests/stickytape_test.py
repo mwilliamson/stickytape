@@ -65,6 +65,13 @@ def can_import_module_from_package_using_from_import_syntax():
         script_path="script_using_from_to_import_module/hello",
         expected_output="Hello\n"
     )
+        
+@istest
+def can_import_multiple_modules_from_module_using_from_import_syntax():
+    test_script_output(
+        script_path="script_using_from_to_import_multiple_modules/hello",
+        expected_output="Hello\n"
+    )
     
 @istest
 def imported_modules_are_transformed():
