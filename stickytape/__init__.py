@@ -8,11 +8,9 @@ def script(path, python_paths=[]):
     sys_path = [os.path.dirname(path)] + python_paths
     
     output.append(_read_shebang(path))
-    
-    with open(path) as script_file:
-        output.append(_prelude())
-        output.append("    " + "".join(_body(script_file, sys_path)).replace("\n", "\n    "))
-        return "".join(output)
+    output.append(_prelude())
+    output.append("    " + _body(path, sys_path).replace("\n", "\n    "))
+    return "".join(output)
 
 def _read_shebang(path):
     with open(path) as script_file:
@@ -23,17 +21,18 @@ def _prelude():
     with open(prelude_path) as prelude_file:
         return prelude_file.read()
 
-def _body(script_file, sys_path):
-    module_writing_output = []
-    original_body_output = []
-    for line in script_file:
-        original_body_output.append(line)
-        module_writer = _transform_line(line, sys_path)
-        if module_writer is not None:
-            module_writing_output.extend(module_writer)
-    
-    body_output = module_writing_output + original_body_output
-    return "".join(body_output)
+def _body(script_file_path, sys_path):
+    with open(script_file_path) as script_file:
+        module_writing_output = []
+        original_body_output = []
+        for line in script_file:
+            original_body_output.append(line)
+            module_writer = _transform_line(line, sys_path)
+            if module_writer is not None:
+                module_writing_output.extend(module_writer)
+        
+        body_output = module_writing_output + original_body_output
+        return "".join(body_output)
 
 def _generate_module_writers(python_file, sys_path):
     module_writing_output = []
