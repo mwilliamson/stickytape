@@ -8,31 +8,35 @@ def script(path, python_paths=[]):
     sys_path = [os.path.dirname(path)] + python_paths
     
     with open(path) as script_file:
-        _add_shebang(script_file, output)
-        _add_prelude(script_file, output)
-        _add_body(script_file, output, sys_path)
-        print "".join(output)
+        output.append(_shebang(script_file))
+        output.append(_prelude())
+        output.append(_body(script_file, sys_path))
         return "".join(output)
 
-def _add_shebang(script_file, output):
-    output.append(script_file.readline())
+def _shebang(script_file):
+    return script_file.readline()
     
-def _add_prelude(script_file, output):
+def _prelude():
     prelude_path = os.path.join(os.path.dirname(__file__), "prelude.py")
     with open(prelude_path) as prelude_file:
-        output.append(prelude_file.read())
+        return prelude_file.read()
 
-def _add_body(script_file, output, sys_path):
-    body_output = []
+def _body(script_file, sys_path):
+    module_writing_output = []
+    original_body_output = []
     for line in script_file:
-        body_output.append(_transform(line, sys_path))
-        
-    output.append("    " + "".join(body_output).replace("\n", "\n    "))
+        original_body_output.append(line)
+        module_writer = _transform(line, sys_path)
+        if module_writer is not None:
+            module_writing_output.extend(module_writer)
+    
+    body_output = module_writing_output + original_body_output
+    return "    " + "".join(body_output).replace("\n", "\n    ")
 
 def _transform(line, sys_path):
     import_line = _read_import_line(line)
     if import_line is None or _is_stlib_import(import_line):
-        return line
+        return None
     else:
         return _transform_import(import_line, sys_path)
         
@@ -40,11 +44,11 @@ def _read_import_line(line):
     package_pattern = "([^\s.]+(?:\.[^\s.]+)*)"
     result = re.match("^import " + package_pattern + "$", line.strip())
     if result:
-        return ImportLine(line, result.group(1).replace(".", "/"), None)
+        return ImportLine(result.group(1).replace(".", "/"), None)
     
     result = re.match("^from " + package_pattern +" import ([^\s.]+)$", line.strip())
     if result:
-        return ImportLine(line, result.group(1).replace(".", "/"), result.group(2))
+        return ImportLine(result.group(1).replace(".", "/"), result.group(2))
     
     return None
 
@@ -58,7 +62,6 @@ def _transform_import(import_line, sys_path):
             _string_escape(module_path),
             _string_escape(module_source)
         ))
-    output.append(import_line.original_string)
     return "".join(output)
     
 def _read_possible_import_targets(import_line, sys_paths):
@@ -105,8 +108,7 @@ def _is_stlib_import(import_line):
     return import_line.import_path in _stdlib_modules
 
 class ImportLine(object):
-    def __init__(self, original_string, import_path, item):
-        self.original_string = original_string
+    def __init__(self, import_path, item):
         self.import_path = import_path
         self.item = item
         
