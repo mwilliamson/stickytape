@@ -8,8 +8,7 @@ import shutil
 from nose.tools import istest, assert_equal
 
 import stickytape
-from .test_scripts import root as test_script_root
-
+from test_scripts import root as test_script_root
 
 @istest
 def single_file_script_still_works():
@@ -29,6 +28,13 @@ def stdlib_imports_are_not_modified():
 def script_that_imports_local_module_is_converted_to_single_file():
     test_script_output(
         script_path="script_with_single_local_import/hello",
+        expected_output="Hello\n"
+    )
+        
+@istest
+def script_that_imports_local_package_is_converted_to_single_file():
+    test_script_output(
+        script_path="script_with_single_local_import_of_package/hello",
         expected_output="Hello\n"
     )
 

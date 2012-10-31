@@ -44,21 +44,29 @@ def _read_import_line(line):
         return None
 
 def _transform_import(import_line, sys_path):
-    module_source = _read_import_target(import_line, sys_path)
+    module_path, module_source = _read_import_target(import_line, sys_path)
     write_module = "__stickytape_write_module({0}, {1})".format(
-        _string_escape(import_line.import_path),
+        _string_escape(module_path),
         _string_escape(module_source)
     )
     return "{0}\n{1}".format(write_module, import_line.original_string)
     
 def _read_import_target(import_line, sys_paths):
     for sys_path in sys_paths:
-        module_path = os.path.join(sys_path, import_line.import_path + ".py")
-        if os.path.exists(module_path):
-            with open(module_path) as module_file:
-                return module_file.read()
+        module_paths = [
+            import_line.import_path + ".py",
+            os.path.join(import_line.import_path, "__init__.py")
+        ]
+        for module_path in module_paths:
+            full_module_path = os.path.join(sys_path, module_path)
+            if os.path.exists(full_module_path):
+                return module_path, _read_file(full_module_path)
                 
     raise RuntimeError("Could not find module: " + import_line.import_path)
+
+def _read_file(path):
+    with open(path) as file:
+        return file.read()
 
 def _string_escape(string):
     return "'''{0}'''".format(codecs.getencoder("string_escape")(string)[0])

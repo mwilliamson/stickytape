@@ -14,7 +14,7 @@ with __stickytape_temporary_dir() as __stickytape_working_dir:
     def __stickytape_write_module(path, contents):
         import os, os.path, errno
         
-        path = os.path.join(__stickytape_working_dir, path + ".py")
+        path = os.path.join(__stickytape_working_dir, path)
 
         def mkdir_p(path):
             try:
