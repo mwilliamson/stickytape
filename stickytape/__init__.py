@@ -39,8 +39,12 @@ def _read_import_line(line):
     result = re.match("^import ([^\s.]+)$", line.strip())
     if result:
         return ImportLine(line, result.group(1).replace(".", "/"))
-    else:
-        return None
+    
+    result = re.match("^from ([^\s.]+) import ([^\s.]+)$", line.strip())
+    if result:
+        return ImportLine(line, result.group(1).replace(".", "/"))
+    
+    return None
 
 def _transform_import(import_line, sys_path):
     module_path, module_source = _read_import_target(import_line, sys_path)
