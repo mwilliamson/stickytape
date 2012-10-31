@@ -25,23 +25,72 @@ def _prelude():
     with open(prelude_path) as prelude_file:
         return prelude_file.read()
 
-def _generate_module_writers(python_file_path, sys_path):
-    with open(python_file_path) as python_file:
-        module_writing_output = []
-        for line in python_file:
-            module_writer = _transform_line(line, sys_path)
-            if module_writer is not None:
-                module_writing_output.extend(module_writer)
-        
-        return "".join(module_writing_output)
-    
+def _generate_module_writers(path, sys_path):
+    generator = ModuleWriterGenerator(sys_path)
+    generator.generate_for_file(path)
+    return generator.build()
 
-def _transform_line(line, sys_path):
-    import_line = _read_import_line(line)
-    if import_line is None or _is_stlib_import(import_line):
+class ModuleWriterGenerator(object):
+    def __init__(self, sys_path):
+        self._sys_path = sys_path
+        self._modules = {}
+    
+    def build(self):
+        output = []
+        for module_path, module_source in self._modules.iteritems():
+            output.append("    __stickytape_write_module({0}, {1})\n".format(
+                _string_escape(module_path),
+                _string_escape(module_source)
+            ))
+        return "".join(output)
+    
+    def generate_for_file(self, python_file_path):
+        with open(python_file_path) as python_file:
+            module_writing_output = []
+            for line in python_file:
+                module_writer = self._generate_for_line(line)
+    
+    def _generate_for_line(self, line):
+        import_line = _read_import_line(line)
+        if import_line is not None and not _is_stlib_import(import_line):
+            self._generate_for_import(import_line)
+
+    def _generate_for_import(self, import_line):
+        import_targets = self._read_possible_import_targets(import_line)
+        
+        for import_target in import_targets:
+            if import_target.module_path not in self._modules:
+                self._modules[import_target.module_path] = import_target.source
+                self.generate_for_file(import_target.absolute_path)
+    
+    def _read_possible_import_targets(self, import_line):
+        possible_module_paths = [
+            import_line.import_path + ".py",
+            os.path.join(import_line.import_path, "__init__.py")
+        ]
+        for item in import_line.items:
+            possible_module_paths += [
+                os.path.join(import_line.import_path, item + ".py"),
+                os.path.join(import_line.import_path, item, "__init__.py")
+            ]
+        
+        import_targets = [
+            self._find_module(module_path)
+            for module_path in possible_module_paths
+        ]
+        
+        valid_import_targets = [target for target in import_targets if target is not None]
+        if len(valid_import_targets) > 0:
+            return valid_import_targets
+        else:
+            raise RuntimeError("Could not find module: " + import_line.import_path)
+
+    def _find_module(self, module_path):
+        for sys_path in self._sys_path:
+            full_module_path = os.path.join(sys_path, module_path)
+            if os.path.exists(full_module_path):
+                return ImportTarget(full_module_path, module_path, _read_file(full_module_path))
         return None
-    else:
-        return _transform_import(import_line, sys_path)
         
 def _read_import_line(line):
     package_pattern = r"([^\s.]+(?:\.[^\s.]+)*)"
@@ -54,48 +103,6 @@ def _read_import_line(line):
         items = re.split(r"\s*,\s*", result.group(2))
         return ImportLine(result.group(1).replace(".", "/"), items)
     
-    return None
-
-def _transform_import(import_line, sys_path):
-    import_targets = _read_possible_import_targets(import_line, sys_path)
-    
-    output = []
-    
-    for import_target in import_targets:
-        output.append( "    __stickytape_write_module({0}, {1})\n".format(
-            _string_escape(import_target.module_path),
-            _string_escape(import_target.source)
-        ))
-        output.append(_generate_module_writers(import_target.absolute_path, sys_path))
-    return "".join(output)
-    
-def _read_possible_import_targets(import_line, sys_paths):
-    possible_module_paths = [
-        import_line.import_path + ".py",
-        os.path.join(import_line.import_path, "__init__.py")
-    ]
-    for item in import_line.items:
-        possible_module_paths += [
-            os.path.join(import_line.import_path, item + ".py"),
-            os.path.join(import_line.import_path, item, "__init__.py")
-        ]
-    
-    import_targets = [
-        _find_module(module_path, sys_paths)
-        for module_path in possible_module_paths
-    ]
-    
-    valid_import_targets = [target for target in import_targets if target is not None]
-    if len(valid_import_targets) > 0:
-        return valid_import_targets
-    else:
-        raise RuntimeError("Could not find module: " + import_line.import_path)
-
-def _find_module(module_path, sys_paths):
-    for sys_path in sys_paths:
-        full_module_path = os.path.join(sys_path, module_path)
-        if os.path.exists(full_module_path):
-            return ImportTarget(full_module_path, module_path, _read_file(full_module_path))
     return None
 
 def _read_file(path):

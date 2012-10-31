@@ -80,6 +80,13 @@ def imported_modules_are_transformed():
         expected_output="Hello\n"
     )
     
+@istest
+def circular_references_dont_cause_stack_overflow():
+    test_script_output(
+        script_path="circular_reference/hello",
+        expected_output="Hello\n"
+    )
+    
 def test_script_output(script_path, expected_output):
     result = stickytape.script(find_script(script_path))
     with _temporary_script(result) as script_file_path:
