@@ -10,7 +10,7 @@ def script(path, python_paths=[]):
     with open(path) as script_file:
         output.append(_shebang(script_file))
         output.append(_prelude())
-        output.append(_body(script_file, sys_path))
+        output.append("    " + "".join(_body(script_file, sys_path)).replace("\n", "\n    "))
         return "".join(output)
 
 def _shebang(script_file):
@@ -26,14 +26,14 @@ def _body(script_file, sys_path):
     original_body_output = []
     for line in script_file:
         original_body_output.append(line)
-        module_writer = _transform(line, sys_path)
+        module_writer = _transform_line(line, sys_path)
         if module_writer is not None:
             module_writing_output.extend(module_writer)
     
     body_output = module_writing_output + original_body_output
-    return "    " + "".join(body_output).replace("\n", "\n    ")
+    return "".join(body_output)
 
-def _transform(line, sys_path):
+def _transform_line(line, sys_path):
     import_line = _read_import_line(line)
     if import_line is None or _is_stlib_import(import_line):
         return None
@@ -57,11 +57,14 @@ def _transform_import(import_line, sys_path):
     
     output = []
     
-    for module_path, module_source in import_targets:
+    for import_target in import_targets:
         output.append( "__stickytape_write_module({0}, {1})\n".format(
-            _string_escape(module_path),
-            _string_escape(module_source)
+            _string_escape(import_target.module_path),
+            _string_escape(import_target.source)
         ))
+        with open(import_target.absolute_path) as imported_module_file:
+            output.append(_body(imported_module_file, sys_path))
+    print "".join(output)
     return "".join(output)
     
 def _read_possible_import_targets(import_line, sys_paths):
@@ -91,7 +94,7 @@ def _find_module(module_path, sys_paths):
     for sys_path in sys_paths:
         full_module_path = os.path.join(sys_path, module_path)
         if os.path.exists(full_module_path):
-            return module_path, _read_file(full_module_path)
+            return ImportTarget(full_module_path, module_path, _read_file(full_module_path))
     return None
 
 def _read_file(path):
@@ -106,6 +109,12 @@ _stdlib_modules = ["argparse", "hashlib", "os", "sys"]
 
 def _is_stlib_import(import_line):
     return import_line.import_path in _stdlib_modules
+
+class ImportTarget(object):
+    def __init__(self, absolute_path, module_path, source):
+        self.absolute_path = absolute_path
+        self.module_path = module_path
+        self.source = source
 
 class ImportLine(object):
     def __init__(self, import_path, item):

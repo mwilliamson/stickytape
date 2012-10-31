@@ -58,7 +58,14 @@ def can_import_module_from_package_using_from_import_syntax():
         script_path="script_using_from_to_import_module/hello",
         expected_output="Hello\n"
     )
-
+    
+@istest
+def imported_modules_are_transformed():
+    test_script_output(
+        script_path="imports_in_imported_modules/hello",
+        expected_output="Hello\n"
+    )
+    
 def test_script_output(script_path, expected_output):
     result = stickytape.script(find_script(script_path))
     with _temporary_script(result) as script_file_path:
