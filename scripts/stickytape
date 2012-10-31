@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+
+import argparse
+
+import stickytape
+
+def main():
+    args = _parse_args()
+    print stickytape.script(args.script, args.add_python_path)
+
+def _parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("script")
+    parser.add_argument("--add-python-path", action="append", default=[])
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    main()
+

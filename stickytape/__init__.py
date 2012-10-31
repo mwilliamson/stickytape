@@ -2,10 +2,10 @@ import os.path
 import re
 import codecs
 
-def script(path):
+def script(path, python_paths=[]):
     output = []
     
-    sys_path = [os.path.dirname(path)]
+    sys_path = [os.path.dirname(path)] + python_paths
     
     with open(path) as script_file:
         _add_shebang(script_file, output)
@@ -71,7 +71,7 @@ def _string_escape(string):
     return "'''{0}'''".format(codecs.getencoder("string_escape")(string)[0])
 
 # TODO: fill out, either by hand or generatively
-_stdlib_modules = ["hashlib"]
+_stdlib_modules = ["argparse", "hashlib", "os", "sys"]
 
 def _is_stlib_import(import_line):
     return import_line.import_path in _stdlib_modules
