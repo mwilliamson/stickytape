@@ -113,7 +113,18 @@ def _string_escape(string):
     return "'''{0}'''".format(codecs.getencoder("string_escape")(string)[0])
 
 # TODO: fill out, either by hand or generatively
-_stdlib_modules = ["argparse", "codecs", "contextlib", "errno", "functools", "hashlib", "os", "os/path", "re", "shutil", "subprocess", "sys", "tempfile"]
+_stdlib_modules = [
+    "argparse",
+    "codecs", "contextlib",
+    "errno",
+    "functools",
+    "hashlib",
+    "os", "os/path",
+    "re",
+    "shutil", "subprocess", "sys",
+    "tempfile", "time",
+    "urlparse"
+]
 
 def _is_stlib_import(import_line):
     return import_line.import_path in _stdlib_modules
