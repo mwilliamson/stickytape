@@ -1,6 +1,7 @@
 import os.path
 import re
 import codecs
+import subprocess
 
 def script(path, add_python_paths=[], python_binary=None):
     python_paths = [os.path.dirname(path)] + add_python_paths + _read_sys_path_from_python_bin(python_binary)
