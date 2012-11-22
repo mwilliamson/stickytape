@@ -2,16 +2,26 @@ import os.path
 import re
 import codecs
 
-def script(path, python_paths=[]):
-    output = []
+def script(path, add_python_paths=[], python_binary=None):
+    python_paths = [os.path.dirname(path)] + add_python_paths + _read_sys_path_from_python_bin(python_binary)
     
-    sys_path = [os.path.dirname(path)] + python_paths
+    output = []
     
     output.append(_read_shebang(path))
     output.append(_prelude())
-    output.append(_generate_module_writers(path, sys_path))
+    output.append(_generate_module_writers(path, python_paths))
     output.append(_indent(open(path).read()))
     return "".join(output)
+
+def _read_sys_path_from_python_bin(binary_path):
+    if binary_path is None:
+        return []
+    else:
+        output = subprocess.check_output(
+            [binary_path, "-c", "import sys;\nfor path in sys.path: print path"],
+            env={}
+        )
+        return [line.strip() for line in output.split("\n") if line.strip()]
 
 def _indent(string):
     return "    " + string.replace("\n", "\n    ")

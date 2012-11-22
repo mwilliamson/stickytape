@@ -9,19 +9,9 @@ import stickytape
 def main():
     args = _parse_args()
     output_file = _open_output(args)
-    python_paths = args.add_python_path + _read_sys_path_from_python_bin(args.python_binary)
-    output = stickytape.script(args.script,python_paths )
+    output = stickytape.script(
+        args.script, args.add_python_path, args.python_binary)
     output_file.write(output)
-
-def _read_sys_path_from_python_bin(binary_path):
-    if binary_path is None:
-        return []
-    else:
-        output = subprocess.check_output(
-            [binary_path, "-c", "import sys;\nfor path in sys.path: print path"],
-            env={}
-        )
-        return [line.strip() for line in output.split("\n") if line.strip()]
 
 def _open_output(args):
     if args.output_file is None:
