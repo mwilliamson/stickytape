@@ -8,7 +8,6 @@ def script(path, add_python_paths=[], python_binary=None):
     
     output = []
     
-    output.append(_read_shebang(path))
     output.append(_prelude())
     output.append(_generate_module_writers(path, python_paths))
     output.append(_indent(open(path).read()))
@@ -27,10 +26,6 @@ def _read_sys_path_from_python_bin(binary_path):
 def _indent(string):
     return "    " + string.replace("\n", "\n    ")
 
-def _read_shebang(path):
-    with open(path) as script_file:
-        return script_file.readline()
-    
 def _prelude():
     prelude_path = os.path.join(os.path.dirname(__file__), "prelude.py")
     with open(prelude_path) as prelude_file:

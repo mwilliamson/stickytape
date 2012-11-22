@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import tempfile as __stickytape_tempfile
 import contextlib as __stickytape_contextlib
 import shutil as __stickytape_shutil
