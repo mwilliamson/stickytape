@@ -125,6 +125,7 @@ _stdlib_modules = [
     "errno",
     "functools",
     "hashlib",
+    "json",
     "os", "os/path",
     "re",
     "shutil", "subprocess", "sys",
