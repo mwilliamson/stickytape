@@ -94,6 +94,13 @@ def implictly_relative_imports_are_resolved_correctly():
         expected_output="Hello\n"
     )
     
+@istest
+def explicit_relative_imports_with_single_dot_are_resolved_correctly():
+    test_script_output(
+        script_path="explicit_relative_import_single_dot/hello",
+        expected_output="Hello\n"
+    )
+    
 def test_script_output(script_path, expected_output):
     result = stickytape.script(find_script(script_path))
     with _temporary_script(result) as script_file_path:

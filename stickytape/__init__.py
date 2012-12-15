@@ -106,17 +106,24 @@ class ModuleWriterGenerator(object):
         return None
         
 def _read_import_line(line):
-    package_pattern = r"([^\s.]+(?:\.[^\s.]+)*)"
+    package_pattern = r"([^\s]+(?:\.[^\s.]+)*)"
     result = re.match("^import " + package_pattern + "$", line.strip())
     if result:
-        return ImportLine(result.group(1).replace(".", "/"), [])
+        return ImportLine(_resolve_package_to_import_path(result.group(1)), [])
     
     result = re.match("^from " + package_pattern + r" import ([^\s.]+(?:\s*,\s*[^\s.]+)*)$", line.strip())
     if result:
         items = re.split(r"\s*,\s*", result.group(2))
-        return ImportLine(result.group(1).replace(".", "/"), items)
+        return ImportLine(_resolve_package_to_import_path(result.group(1)), items)
     
     return None
+
+def _resolve_package_to_import_path(package):
+    import_path = package.replace(".", "/")
+    if import_path.startswith("/"):
+        return "." + import_path
+    else:
+        return import_path
 
 def _read_file(path):
     with open(path) as file:
@@ -131,7 +138,7 @@ def _is_stlib_import(import_line):
 class ImportTarget(object):
     def __init__(self, absolute_path, module_path):
         self.absolute_path = absolute_path
-        self.module_path = module_path
+        self.module_path = os.path.normpath(module_path)
         
     def read(self):
         return _read_file(self.absolute_path)
