@@ -51,25 +51,28 @@ class ModuleWriterGenerator(object):
         return "".join(output)
     
     def generate_for_file(self, python_file_path):
-        with open(python_file_path) as python_file:
+        self._generate_for_module(ImportTarget(python_file_path, "."))
+                
+    def _generate_for_module(self, python_module):
+        with open(python_module.absolute_path) as python_file:
             module_writing_output = []
             for line in python_file:
-                module_writer = self._generate_for_line(line)
+                module_writer = self._generate_for_line(python_module, line)
     
-    def _generate_for_line(self, line):
+    def _generate_for_line(self, python_module, line):
         import_line = _read_import_line(line)
         if import_line is not None and not _is_stlib_import(import_line):
-            self._generate_for_import(import_line)
+            self._generate_for_import(python_module, import_line)
 
-    def _generate_for_import(self, import_line):
-        import_targets = self._read_possible_import_targets(import_line)
+    def _generate_for_import(self, python_module, import_line):
+        import_targets = self._read_possible_import_targets(python_module, import_line)
         
         for import_target in import_targets:
             if import_target.module_path not in self._modules:
-                self._modules[import_target.module_path] = import_target.source
-                self.generate_for_file(import_target.absolute_path)
+                self._modules[import_target.module_path] = import_target.read()
+                self._generate_for_module(import_target)
     
-    def _read_possible_import_targets(self, import_line):
+    def _read_possible_import_targets(self, python_module, import_line):
         possible_module_paths = [
             import_line.import_path + ".py",
             os.path.join(import_line.import_path, "__init__.py")
@@ -81,7 +84,7 @@ class ModuleWriterGenerator(object):
             ]
         
         import_targets = [
-            self._find_module(module_path)
+            self._find_module(python_module, module_path)
             for module_path in possible_module_paths
         ]
         
@@ -91,11 +94,15 @@ class ModuleWriterGenerator(object):
         else:
             raise RuntimeError("Could not find module: " + import_line.import_path)
 
-    def _find_module(self, module_path):
+    def _find_module(self, importing_python_module, module_path):
+        relative_module_path = os.path.join(os.path.dirname(importing_python_module.absolute_path), module_path)
+        if os.path.exists(relative_module_path):
+            return ImportTarget(relative_module_path, os.path.join(os.path.dirname(importing_python_module.module_path), module_path))
+        
         for sys_path in self._sys_path:
             full_module_path = os.path.join(sys_path, module_path)
             if os.path.exists(full_module_path):
-                return ImportTarget(full_module_path, module_path, _read_file(full_module_path))
+                return ImportTarget(full_module_path, module_path)
         return None
         
 def _read_import_line(line):
@@ -122,16 +129,17 @@ def _is_stlib_import(import_line):
     return import_line.import_path in _stdlib_modules
 
 class ImportTarget(object):
-    def __init__(self, absolute_path, module_path, source):
+    def __init__(self, absolute_path, module_path):
         self.absolute_path = absolute_path
         self.module_path = module_path
-        self.source = source
+        
+    def read(self):
+        return _read_file(self.absolute_path)
 
 class ImportLine(object):
     def __init__(self, import_path, items):
         self.import_path = import_path
         self.items = items
-
 
 _stdlib_modules = set([
     "string",
