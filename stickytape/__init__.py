@@ -89,10 +89,13 @@ class ModuleWriterGenerator(object):
         ]
         
         valid_import_targets = [target for target in import_targets if target is not None]
-        if len(valid_import_targets) > 0:
-            return valid_import_targets
-        else:
-            raise RuntimeError("Could not find module: " + import_line.import_path)
+        return valid_import_targets
+        # TODO: allow the user some choice in what happens in this case?
+        # Detection of try/except blocks is possibly over-complicating things
+        #~ if len(valid_import_targets) > 0:
+            #~ return valid_import_targets
+        #~ else:
+            #~ raise RuntimeError("Could not find module: " + import_line.import_path)
 
     def _find_module(self, importing_python_module, module_path):
         relative_module_path = os.path.join(os.path.dirname(importing_python_module.absolute_path), module_path)
