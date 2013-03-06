@@ -107,6 +107,15 @@ def explicit_relative_imports_are_resolved_correctly():
         script_path="explicit_relative_import/hello",
         expected_output="Hello\n"
     )
+
+
+@istest
+def package_init_can_be_used_even_if_not_imported_explicitly():
+    test_script_output(
+        script_path="implicit_init_import/hello",
+        expected_output="Hello\n"
+    )
+    
     
 def test_script_output(script_path, expected_output):
     result = stickytape.script(find_script(script_path))
