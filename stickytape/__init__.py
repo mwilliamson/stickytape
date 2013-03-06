@@ -118,7 +118,8 @@ def _read_import_line(line):
     if result:
         return ImportLine(_resolve_package_to_import_path(result.group(1)), [])
     
-    result = re.match("^from " + package_pattern + r" import ([^\s.]+(?:\s*,\s*[^\s.]+)*)$", line.strip())
+    import_item_regex = "\s*[^\s.]+\s*(?:as\s*[^\s.]\s*)?"
+    result = re.match("^from " + package_pattern + r" import ({0}(?:,{0})*)$".format(import_item_regex), line.strip())
     if result:
         items = re.split(r"\s*,\s*", result.group(2))
         return ImportLine(_resolve_package_to_import_path(result.group(1)), items)

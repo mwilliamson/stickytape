@@ -115,6 +115,14 @@ def package_init_can_be_used_even_if_not_imported_explicitly():
         script_path="implicit_init_import/hello",
         expected_output="Hello\n"
     )
+
+
+@istest
+def import_is_detected_when_import_is_renamed():
+    test_script_output(
+        script_path="import_from_as/hello",
+        expected_output="Hello\n"
+    )
     
     
 def test_script_output(script_path, expected_output):
