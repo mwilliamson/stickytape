@@ -118,10 +118,11 @@ def _read_import_line(line):
     if result:
         return ImportLine(_resolve_package_to_import_path(result.group(1)), [])
     
-    import_item_regex = "\s*[^\s.]+\s*(?:as\s*[^\s.]\s*)?"
+    import_item_regex = r"\s*([^\s.]+)\s*(?:as\s*[^\s.]\s*)?"
     result = re.match("^from " + package_pattern + r" import ({0}(?:,{0})*)$".format(import_item_regex), line.strip())
     if result:
-        items = re.split(r"\s*,\s*", result.group(2))
+        item_imports = result.group(2).split(",")
+        items = [re.match(import_item_regex, item_import).group(1) for item_import in item_imports]
         return ImportLine(_resolve_package_to_import_path(result.group(1)), items)
     
     return None

@@ -118,9 +118,17 @@ def package_init_can_be_used_even_if_not_imported_explicitly():
 
 
 @istest
-def import_is_detected_when_import_is_renamed():
+def value_import_is_detected_when_import_is_renamed():
     test_script_output(
-        script_path="import_from_as/hello",
+        script_path="import_from_as_value/hello",
+        expected_output="Hello\n"
+    )
+
+
+@istest
+def module_import_is_detected_when_import_is_renamed():
+    test_script_output(
+        script_path="import_from_as_module/hello",
         expected_output="Hello\n"
     )
     
