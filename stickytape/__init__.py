@@ -2,6 +2,7 @@ import os.path
 import re
 import codecs
 import subprocess
+import ast
 
 
 def script(path, add_python_paths=[], python_binary=None):
@@ -55,17 +56,10 @@ class ModuleWriterGenerator(object):
         self._generate_for_module(ImportTarget(python_file_path, "."))
                 
     def _generate_for_module(self, python_module):
-        import_lines = self._find_imports_in_file(python_module.absolute_path)
+        import_lines = _find_imports_in_file(python_module.absolute_path)
         for import_line in import_lines:
             if not _is_stlib_import(import_line):
                 self._generate_for_import(python_module, import_line)
-            
-    def _find_imports_in_file(self, file_path):
-        with open(file_path) as python_file:
-            for line in python_file:
-                import_line = _read_import_line(line)
-                if import_line is not None:
-                    yield import_line
     
     def _generate_for_import(self, python_module, import_line):
         import_targets = self._read_possible_import_targets(python_module, import_line)
@@ -114,21 +108,24 @@ class ModuleWriterGenerator(object):
             if os.path.exists(full_module_path):
                 return ImportTarget(full_module_path, module_path)
         return None
-        
-def _read_import_line(line):
-    package_pattern = r"([^\s]+(?:\.[^\s.]+)*)"
-    result = re.match("^import " + package_pattern + "$", line.strip())
-    if result:
-        return ImportLine(_resolve_package_to_import_path(result.group(1)), [])
+
+            
+def _find_imports_in_file(file_path):
+    source = _read_file(file_path)
+    parse_tree = ast.parse(source, file_path)
     
-    import_item_regex = r"\s*([^\s.]+)\s*(?:as\s*[^\s.]\s*)?"
-    result = re.match("^from " + package_pattern + r" import ({0}(?:,{0})*)$".format(import_item_regex), line.strip())
-    if result:
-        item_imports = result.group(2).split(",")
-        items = [re.match(import_item_regex, item_import).group(1) for item_import in item_imports]
-        return ImportLine(_resolve_package_to_import_path(result.group(1)), items)
-    
-    return None
+    for node in ast.walk(parse_tree):
+        if isinstance(node, ast.Import):
+            for name in node.names:
+                yield ImportLine(name.name, [])
+                
+        if isinstance(node, ast.ImportFrom):
+            if node.module is None:
+                module = "."
+            else:
+                module = node.module
+            yield ImportLine(module, [name.name for name in node.names])
+
 
 def _resolve_package_to_import_path(package):
     import_path = package.replace(".", "/")
@@ -157,7 +154,7 @@ class ImportTarget(object):
 
 class ImportLine(object):
     def __init__(self, import_path, items):
-        self.import_path = import_path
+        self.import_path = _resolve_package_to_import_path(import_path)
         self.items = items
 
 _stdlib_modules = set([
