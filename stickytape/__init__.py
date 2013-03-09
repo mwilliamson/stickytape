@@ -3,6 +3,7 @@ import re
 import codecs
 import subprocess
 
+
 def script(path, add_python_paths=[], python_binary=None):
     python_paths = [os.path.dirname(path)] + add_python_paths + _read_sys_path_from_python_bin(python_binary)
     
@@ -54,16 +55,18 @@ class ModuleWriterGenerator(object):
         self._generate_for_module(ImportTarget(python_file_path, "."))
                 
     def _generate_for_module(self, python_module):
-        with open(python_module.absolute_path) as python_file:
-            module_writing_output = []
+        import_lines = self._find_imports_in_file(python_module.absolute_path)
+        for import_line in import_lines:
+            if not _is_stlib_import(import_line):
+                self._generate_for_import(python_module, import_line)
+            
+    def _find_imports_in_file(self, file_path):
+        with open(file_path) as python_file:
             for line in python_file:
-                module_writer = self._generate_for_line(python_module, line)
+                import_line = _read_import_line(line)
+                if import_line is not None:
+                    yield import_line
     
-    def _generate_for_line(self, python_module, line):
-        import_line = _read_import_line(line)
-        if import_line is not None and not _is_stlib_import(import_line):
-            self._generate_for_import(python_module, import_line)
-
     def _generate_for_import(self, python_module, import_line):
         import_targets = self._read_possible_import_targets(python_module, import_line)
         
