@@ -32,6 +32,6 @@ with __stickytape_temporary_dir() as __stickytape_working_dir:
         with open(full_path, "w") as module_file:
             module_file.write(contents)
 
-    import sys
-    sys.path.insert(0, __stickytape_working_dir)
+    import sys as __stickytape_sys
+    __stickytape_sys.path.insert(0, __stickytape_working_dir)
 
