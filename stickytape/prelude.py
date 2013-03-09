@@ -17,7 +17,6 @@ with __stickytape_temporary_dir() as __stickytape_working_dir:
         import os, os.path, errno
 
         def make_package(path):
-            # TODO: should use path.split
             parts = path.split("/")
             partial_path = __stickytape_working_dir
             for part in parts:
