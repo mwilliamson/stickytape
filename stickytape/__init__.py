@@ -1,5 +1,4 @@
 import os.path
-import re
 import codecs
 import subprocess
 import ast
