@@ -17,11 +17,6 @@ from, for instance the Python binary inside a virtualenv:
 
 As you might expect with a program that munges source files, there are a few
 caveats:
-
-* Detection of imports is done using a fairly simple regex. For instance, things
-  will go horribly wrong if you use have two import statements on the same line
-  separated by a semi-colon. Similarly, imports using importlib won't be
-  detected.
   
 * Anything that relies on the specific location of files will probably no longer work. In
   other words, `__file__` probably isn't all that useful.
