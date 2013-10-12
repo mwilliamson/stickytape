@@ -5,7 +5,7 @@ import contextlib
 import subprocess
 import shutil
 
-from nose.tools import istest, assert_equal
+from nose.tools import istest, nottest, assert_equal
 
 import stickytape
 from test_scripts import root as test_script_root
@@ -132,7 +132,8 @@ def module_import_is_detected_when_import_is_renamed():
         expected_output="Hello\n"
     )
     
-    
+
+@nottest
 def test_script_output(script_path, expected_output):
     result = stickytape.script(find_script(script_path))
     with _temporary_script(result) as script_file_path:
