@@ -12,6 +12,7 @@ setup(
     description='Convert Python packages into a single script',
     long_description=read("README"),
     author='Michael Williamson',
+    author_email='mike@zwobble.org',
     url='http://github.com/mwilliamson/stickytape',
     scripts=["scripts/stickytape"],
     packages=['stickytape'],
