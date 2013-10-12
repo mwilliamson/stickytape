@@ -2,4 +2,4 @@
 
 import first
 
-print "Hello"
+print("Hello")

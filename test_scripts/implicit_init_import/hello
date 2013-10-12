@@ -2,4 +2,4 @@
 
 import greetings.irrelevant
 
-print greetings.message
+print(greetings.message)

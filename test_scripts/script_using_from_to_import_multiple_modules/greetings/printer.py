@@ -1,2 +1,2 @@
 def print_stdout(value):
-    print value
+    print(value)

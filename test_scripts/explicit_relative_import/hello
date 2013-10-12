@@ -2,4 +2,4 @@
 
 import greetings
 
-print greetings.message
+print(greetings.message)

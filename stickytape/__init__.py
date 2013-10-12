@@ -2,6 +2,7 @@ import os.path
 import codecs
 import subprocess
 import ast
+import sys
 
 
 def script(path, add_python_paths=[], python_binary=None):
@@ -44,7 +45,7 @@ class ModuleWriterGenerator(object):
     
     def build(self):
         output = []
-        for module_path, module_source in self._modules.iteritems():
+        for module_path, module_source in _iteritems(self._modules):
             output.append("    __stickytape_write_module({0}, {1})\n".format(
                 _string_escape(module_path),
                 _string_escape(module_source)
@@ -138,7 +139,7 @@ def _read_file(path):
         return file.read()
 
 def _string_escape(string):
-    return "'''{0}'''".format(codecs.getencoder("string_escape")(string)[0])
+    return "'''{0}'''".format(codecs.getencoder(_py_string_encoding)(string)[0].decode("ascii"))
 
 def _is_stlib_import(import_line):
     return import_line.import_path in _stdlib_modules
@@ -473,3 +474,11 @@ _stdlib_modules = set([
     "sunaudiodev",
     "SUNAUDIODEV",
 ])
+
+
+if sys.version_info[0] == 2:
+    _iteritems = lambda x: x.iteritems()
+    _py_string_encoding = "string_escape"
+else:
+    _iteritems = lambda x: x.items()
+    _py_string_encoding = "unicode_escape"

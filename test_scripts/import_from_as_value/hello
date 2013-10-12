@@ -2,4 +2,4 @@
 
 from greeting import message as m
 
-print m
+print(m)
