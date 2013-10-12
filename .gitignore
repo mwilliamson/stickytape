@@ -1,2 +1,5 @@
 *.pyc
 _virtualenv
+/.tox
+/README
+/MANIFEST
