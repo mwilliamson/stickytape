@@ -23,11 +23,11 @@ with __stickytape_temporary_dir() as __stickytape_working_dir:
             for part in parts:
                 partial_path = os.path.join(partial_path, part)
                 if not os.path.exists(partial_path):
-                    os.mkdir(partial_path)
+                    os.makedirs(partial_path)
                     open(os.path.join(partial_path, "__init__.py"), "w").write("\n")
-                    
+
         make_package(os.path.dirname(path))
-        
+
         full_path = os.path.join(__stickytape_working_dir, path)
         with open(full_path, "w") as module_file:
             module_file.write(contents)
