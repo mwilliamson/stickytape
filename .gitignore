@@ -2,3 +2,4 @@
 _virtualenv
 /.tox
 /MANIFEST
+/*.egg-info
