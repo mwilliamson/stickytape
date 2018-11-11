@@ -19,9 +19,15 @@ def _read_sys_path_from_python_bin(binary_path):
     if binary_path is None:
         return []
     else:
+        # prevent py3.6/win10:  Fatal Python error: failed to get random numbers to initialize Python
+        if sys.platform.startswith('win'):
+            env = dict([(k, os.environ[k]) for k in os.environ if not k.startswith('PYTHON')])
+        else:
+            env = {}
+
         output = subprocess.check_output(
             [binary_path, "-c", "import sys;\nfor path in sys.path: print(path)"],
-            env={}
+            env=env,
         )
         output = str(output)
         return [line.strip() for line in output.split("\n") if line.strip()]

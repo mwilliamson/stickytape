@@ -22,15 +22,6 @@ def single_file_noexception():
     )
 
 @istest
-def script_using_nested_package_import():
-    """ test that nested-import works without exception """
-    # test passing on linux, need to test on windows - I may have been wrong.
-    stickytape.script(
-        path=find_script('script_using_nested_package_import/hello/__init__.py'),
-        python_binary=sys.executable,
-    )
-
-@istest
 def single_file_script_still_works():
     test_script_output(
         script_path="single_file/hello",
@@ -163,7 +154,13 @@ def test_script_output(script_path, expected_output):
     result = stickytape.script(find_script(script_path))
     with _temporary_script(result) as script_file_path:
         try:
-            output = _shell.run([script_file_path]).output
+            if sys.platform.startswith('win'):
+                # universal_newlines=True converts ``\r\n`` to ``\n``
+                # *AND* converts bytestring to a text-stream
+                output = subprocess.check_output([sys.executable, script_file_path], universal_newlines=True)  # windows uses \r\n without `universal_newlines=True`
+                output = output.encode('latin-1')  # to bytes
+            else:
+                output = _shell.run([script_file_path]).output
         except:
             for index, line in enumerate(result.splitlines()):
                 print((index + 1), line)
@@ -182,8 +179,8 @@ def _temporary_script(contents):
         with open(path, "w") as script_file:
             script_file.write(contents)
 
-
-        _shell.run(["chmod", "+x", path])
+        if not sys.platform.startswith('win'):
+            _shell.run(["chmod", "+x", path])
         yield path
     finally:
         shutil.rmtree(dir_path)
