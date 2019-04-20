@@ -145,7 +145,7 @@ def can_explicitly_set_python_interpreter():
         _shell.run(["virtualenv", venv_path])
         site_packages_path = _find_site_packages(venv_path)
         path_path = os.path.join(site_packages_path, "greetings.pth")
-        with open(path_path, "wt", encoding="utf-8") as path_file:
+        with open(path_path, "w") as path_file:
             path_file.write(find_script("python_path_from_binary/packages\n"))
 
         test_script_output(
