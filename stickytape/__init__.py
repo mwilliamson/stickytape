@@ -63,7 +63,7 @@ class ModuleWriterGenerator(object):
     def _generate_for_module(self, python_module):
         import_lines = _find_imports_in_file(python_module.absolute_path)
         for import_line in import_lines:
-            if not _is_stlib_import(import_line):
+            if not _is_stdlib_import(import_line):
                 self._generate_for_import(python_module, import_line)
 
     def _generate_for_import(self, python_module, import_line):
@@ -146,7 +146,7 @@ def _read_file(path):
 def _string_escape(string):
     return "'''{0}'''".format(codecs.getencoder(_py_string_encoding)(string)[0].decode("ascii"))
 
-def _is_stlib_import(import_line):
+def _is_stdlib_import(import_line):
     return import_line.import_path in _stdlib_modules
 
 class ImportTarget(object):
