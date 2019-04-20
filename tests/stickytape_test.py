@@ -25,70 +25,70 @@ def stdlib_imports_are_not_modified():
         script_path="single_file_using_stdlib/hello",
         expected_output=b"f7ff9e8b7bb2e09b70935a5d785e0cc5d9d0abf0\n"
     )
-        
+
 @istest
 def script_that_imports_local_module_is_converted_to_single_file():
     test_script_output(
         script_path="script_with_single_local_import/hello",
         expected_output=b"Hello\n"
     )
-        
+
 @istest
 def script_that_imports_local_package_is_converted_to_single_file():
     test_script_output(
         script_path="script_with_single_local_import_of_package/hello",
         expected_output=b"Hello\n"
     )
-        
+
 @istest
 def can_import_module_from_package():
     test_script_output(
         script_path="script_using_module_in_package/hello",
         expected_output=b"Hello\n"
     )
-        
+
 @istest
 def can_import_value_from_module_using_from_import_syntax():
     test_script_output(
         script_path="script_with_single_local_from_import/hello",
         expected_output=b"Hello\n"
     )
-        
+
 @istest
 def can_import_multiple_values_from_module_using_from_import_syntax():
     test_script_output(
         script_path="script_using_from_to_import_multiple_values/hello",
         expected_output=b"Hello\n"
     )
-        
+
 @istest
 def can_import_module_from_package_using_from_import_syntax():
     test_script_output(
         script_path="script_using_from_to_import_module/hello",
         expected_output=b"Hello\n"
     )
-        
+
 @istest
 def can_import_multiple_modules_from_module_using_from_import_syntax():
     test_script_output(
         script_path="script_using_from_to_import_multiple_modules/hello",
         expected_output=b"Hello\n"
     )
-    
+
 @istest
 def imported_modules_are_transformed():
     test_script_output(
         script_path="imports_in_imported_modules/hello",
         expected_output=b"Hello\n"
     )
-    
+
 @istest
 def circular_references_dont_cause_stack_overflow():
     test_script_output(
         script_path="circular_reference/hello",
         expected_output=b"Hello\n"
     )
-    
+
 @istest
 def implicitly_relative_imports_are_resolved_correctly():
     if sys.version_info[0] == 3:
@@ -98,14 +98,14 @@ def implicitly_relative_imports_are_resolved_correctly():
         script_path="implicit_relative_import/hello",
         expected_output=b"Hello\n"
     )
-    
+
 @istest
 def explicit_relative_imports_with_single_dot_are_resolved_correctly():
     test_script_output(
         script_path="explicit_relative_import_single_dot/hello",
         expected_output=b"Hello\n"
     )
-    
+
 @istest
 def explicit_relative_imports_are_resolved_correctly():
     test_script_output(
@@ -138,12 +138,44 @@ def module_import_is_detected_when_import_is_renamed():
     )
 
 
+@istest
+def can_explicitly_set_python_interpreter():
+    with _temporary_directory() as temp_path:
+        venv_path = os.path.join(temp_path, "venv")
+        _shell.run(["virtualenv", venv_path])
+        site_packages_path = _find_site_packages(venv_path)
+        path_path = os.path.join(site_packages_path, "greetings.pth")
+        with open(path_path, "wt", encoding="utf-8") as path_file:
+            path_file.write(find_script("python_path_from_binary/packages\n"))
+
+        test_script_output(
+            script_path="python_path_from_binary/hello",
+            expected_output=b"Hello\n",
+            python_binary=os.path.join(venv_path, "bin/python"),
+        )
+
+
+def _find_site_packages(root):
+    paths = []
+
+    for dir_path, dir_names, file_names in os.walk(root):
+        for dir_name in dir_names:
+            if dir_name == "site-packages":
+                paths.append(os.path.join(dir_path, dir_name))
+
+    if len(paths) == 1:
+        return paths[0]
+    else:
+        raise ValueError("Multiple site-packages found: {}".format(paths))
+
+
+
 _shell = spur.LocalShell()
-    
+
 
 @nottest
-def test_script_output(script_path, expected_output):
-    result = stickytape.script(find_script(script_path))
+def test_script_output(script_path, expected_output, **kwargs):
+    result = stickytape.script(find_script(script_path), **kwargs)
     with _temporary_script(result) as script_file_path:
         try:
             output = _shell.run([script_file_path]).output
@@ -152,21 +184,26 @@ def test_script_output(script_path, expected_output):
                 print((index + 1), line)
             raise
         assert_equal(expected_output, output)
-    
+
 
 def find_script(path):
     return os.path.join(test_script_root, path)
 
 @contextlib.contextmanager
 def _temporary_script(contents):
-    dir_path = tempfile.mkdtemp()
-    try:
+    with _temporary_directory() as dir_path:
         path = os.path.join(dir_path, "script")
         with open(path, "w") as script_file:
             script_file.write(contents)
-        
-        
+
         _shell.run(["chmod", "+x", path])
         yield path
+
+
+@contextlib.contextmanager
+def _temporary_directory():
+    dir_path = tempfile.mkdtemp()
+    try:
+        yield dir_path
     finally:
         shutil.rmtree(dir_path)

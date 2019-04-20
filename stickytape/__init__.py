@@ -7,9 +7,9 @@ import sys
 
 def script(path, add_python_paths=[], python_binary=None):
     python_paths = [os.path.dirname(path)] + add_python_paths + _read_sys_path_from_python_bin(python_binary)
-    
+
     output = []
-    
+
     output.append(_prelude())
     output.append(_generate_module_writers(path, python_paths))
     output.append(_indent(open(path).read()))
@@ -20,10 +20,15 @@ def _read_sys_path_from_python_bin(binary_path):
         return []
     else:
         output = subprocess.check_output(
-            [binary_path, "-c", "import sys;\nfor path in sys.path: print path"],
+            [binary_path, "-c", "import sys;\nfor path in sys.path: print(path)"],
             env={}
         )
-        return [line.strip() for line in output.split("\n") if line.strip()]
+        return [
+            # TODO: handle non-UTF-8 encodings
+            line.strip().decode("utf-8")
+            for line in output.split(b"\n")
+            if line.strip()
+        ]
 
 def _indent(string):
     return "    " + string.replace("\n", "\n    ")
@@ -42,7 +47,7 @@ class ModuleWriterGenerator(object):
     def __init__(self, sys_path):
         self._sys_path = sys_path
         self._modules = {}
-    
+
     def build(self):
         output = []
         for module_path, module_source in _iteritems(self._modules):
@@ -51,44 +56,44 @@ class ModuleWriterGenerator(object):
                 _string_escape(module_source)
             ))
         return "".join(output)
-    
+
     def generate_for_file(self, python_file_path):
         self._generate_for_module(ImportTarget(python_file_path, "."))
-                
+
     def _generate_for_module(self, python_module):
         import_lines = _find_imports_in_file(python_module.absolute_path)
         for import_line in import_lines:
             if not _is_stlib_import(import_line):
                 self._generate_for_import(python_module, import_line)
-    
+
     def _generate_for_import(self, python_module, import_line):
         import_targets = self._read_possible_import_targets(python_module, import_line)
-        
+
         for import_target in import_targets:
             if import_target.module_path not in self._modules:
                 self._modules[import_target.module_path] = import_target.read()
                 self._generate_for_module(import_target)
-    
+
     def _read_possible_import_targets(self, python_module, import_line):
         import_path_parts = import_line.import_path.split("/")
         possible_init_module_paths = [
             os.path.join(os.path.join(*import_path_parts[0:index + 1]), "__init__.py")
             for index in range(len(import_path_parts))
         ]
-        
+
         possible_module_paths = [import_line.import_path + ".py"] + possible_init_module_paths
-        
+
         for item in import_line.items:
             possible_module_paths += [
                 os.path.join(import_line.import_path, item + ".py"),
                 os.path.join(import_line.import_path, item, "__init__.py")
             ]
-        
+
         import_targets = [
             self._find_module(python_module, module_path)
             for module_path in possible_module_paths
         ]
-        
+
         valid_import_targets = [target for target in import_targets if target is not None]
         return valid_import_targets
         # TODO: allow the user some choice in what happens in this case?
@@ -102,23 +107,23 @@ class ModuleWriterGenerator(object):
         relative_module_path = os.path.join(os.path.dirname(importing_python_module.absolute_path), module_path)
         if os.path.exists(relative_module_path):
             return ImportTarget(relative_module_path, os.path.join(os.path.dirname(importing_python_module.module_path), module_path))
-        
+
         for sys_path in self._sys_path:
             full_module_path = os.path.join(sys_path, module_path)
             if os.path.exists(full_module_path):
                 return ImportTarget(full_module_path, module_path)
         return None
 
-            
+
 def _find_imports_in_file(file_path):
     source = _read_file(file_path)
     parse_tree = ast.parse(source, file_path)
-    
+
     for node in ast.walk(parse_tree):
         if isinstance(node, ast.Import):
             for name in node.names:
                 yield ImportLine(name.name, [])
-                
+
         if isinstance(node, ast.ImportFrom):
             if node.module is None:
                 module = "."
@@ -148,7 +153,7 @@ class ImportTarget(object):
     def __init__(self, absolute_path, module_path):
         self.absolute_path = absolute_path
         self.module_path = os.path.normpath(module_path)
-        
+
     def read(self):
         return _read_file(self.absolute_path)
 
@@ -169,7 +174,7 @@ _stdlib_modules = set([
     "unicodedata",
     "stringprep",
     "fpformat",
-    
+
     "datetime",
     "calendar",
     "collections",
@@ -189,7 +194,7 @@ _stdlib_modules = set([
     "copy",
     "pprint",
     "repr",
-    
+
     "numbers",
     "math",
     "cmath",
@@ -199,7 +204,7 @@ _stdlib_modules = set([
     "itertools",
     "functools",
     "operator",
-    
+
     "os/path",
     "fileinput",
     "stat",
@@ -212,7 +217,7 @@ _stdlib_modules = set([
     "shutil",
     "dircache",
     "macpath",
-    
+
     "pickle",
     "cPickle",
     "copy_reg",
@@ -226,25 +231,25 @@ _stdlib_modules = set([
     "bsddb",
     "dumbdbm",
     "sqlite3",
-    
+
     "zlib",
     "gzip",
     "bz2",
     "zipfile",
     "tarfile",
-    
+
     "csv",
     "ConfigParser",
     "robotparser",
     "netrc",
     "xdrlib",
     "plistlib",
-    
+
     "hashlib",
     "hmac",
     "md5",
     "sha",
-    
+
     "os",
     "io",
     "time",
@@ -262,7 +267,7 @@ _stdlib_modules = set([
     "platform",
     "errno",
     "ctypes",
-    
+
     "select",
     "threading",
     "thread",
@@ -272,7 +277,7 @@ _stdlib_modules = set([
     "mmap",
     "readline",
     "rlcompleter",
-    
+
     "subprocess",
     "socket",
     "ssl",
@@ -280,7 +285,7 @@ _stdlib_modules = set([
     "popen2",
     "asyncore",
     "asynchat",
-    
+
     "email",
     "json",
     "mailcap",
@@ -297,7 +302,7 @@ _stdlib_modules = set([
     "binascii",
     "quopri",
     "uu",
-    
+
     "HTMLParser",
     "sgmllib",
     "htmllib",
@@ -311,7 +316,7 @@ _stdlib_modules = set([
     "xml/sax/saxutils",
     "xml/sax/xmlreader",
     "xml/parsers/expat",
-    
+
     "webbrowser",
     "cgi",
     "cgitb",
@@ -337,7 +342,7 @@ _stdlib_modules = set([
     "xmlrpclib",
     "SimpleXMLRPCServer",
     "DocXMLRPCServer",
-    
+
     "audioop",
     "imageop",
     "aifc",
@@ -348,31 +353,31 @@ _stdlib_modules = set([
     "imghdr",
     "sndhdr",
     "ossaudiodev",
-    
+
     "gettext",
     "locale",
-    
+
     "cmd",
     "shlex",
-    
+
     "Tkinter",
     "ttk",
     "Tix",
     "ScrolledText",
     "turtle",
-    
+
     "pydoc",
     "doctest",
     "unittest",
     "test",
     "test/test_support",
-    
+
     "bdb",
     "pdb",
     "hotshot",
     "timeit",
     "trace",
-    
+
     "sys",
     "sysconfig",
     "__builtin__",
@@ -390,13 +395,13 @@ _stdlib_modules = set([
     "user",
     "fpectl",
     "distutils",
-    
+
     "code",
     "codeop",
-    
+
     "rexec",
     "Bastion",
-    
+
     "imp",
     "importlib",
     "imputil",
@@ -404,7 +409,7 @@ _stdlib_modules = set([
     "pkgutil",
     "modulefinder",
     "runpy",
-    
+
     "parser",
     "ast",
     "symtable",
@@ -418,14 +423,14 @@ _stdlib_modules = set([
     "compileall",
     "dis",
     "pickletools",
-    
+
     "formatter",
-    
+
     "msilib",
     "msvcrt",
     "_winreg",
     "winsound",
-    
+
     "posix",
     "pwd",
     "spwd",
@@ -442,7 +447,7 @@ _stdlib_modules = set([
     "nis",
     "syslog",
     "commands",
-    
+
     "ic",
     "MacOS",
     "macostools",
@@ -451,13 +456,13 @@ _stdlib_modules = set([
     "FrameWork",
     "autoGIL",
     "ColorPicker",
-    
+
     "gensuitemodule",
     "aetools",
     "aepack",
     "aetypes",
     "MiniAEFrame",
-    
+
     "al",
     "AL",
     "cd",
@@ -470,7 +475,7 @@ _stdlib_modules = set([
     "GL",
     "imgfile",
     "jpeg",
-    
+
     "sunaudiodev",
     "SUNAUDIODEV",
 ])
