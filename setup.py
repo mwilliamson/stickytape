@@ -15,7 +15,6 @@ setup(
     author_email='mike@zwobble.org',
     url='http://github.com/mwilliamson/stickytape',
     packages=['stickytape'],
-    install_requires=["argparse==1.2.1"],
     entry_points={
         "console_scripts": [
             "stickytape=stickytape.main:main"
