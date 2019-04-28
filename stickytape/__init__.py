@@ -20,8 +20,7 @@ def _read_sys_path_from_python_bin(binary_path):
         return []
     else:
         output = subprocess.check_output(
-            [binary_path, "-c", "import sys;\nfor path in sys.path: print(path)"],
-            env={}
+            [binary_path, "-E", "-c", "import sys;\nfor path in sys.path: print(path)"],
         )
         return [
             # TODO: handle non-UTF-8 encodings
