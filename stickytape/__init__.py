@@ -143,9 +143,6 @@ def _read_file(path):
     with open(path) as file:
         return file.read()
 
-def _string_escape(string):
-    return "'''{0}'''".format(codecs.getencoder(_py_string_encoding)(string)[0].decode("ascii"))
-
 def _is_stdlib_import(import_line):
     return import_line.import_path in _stdlib_modules
 
@@ -483,7 +480,11 @@ _stdlib_modules = set([
 
 if sys.version_info[0] == 2:
     _iteritems = lambda x: x.iteritems()
-    _py_string_encoding = "string_escape"
+
+    def _string_escape(string):
+        return "'''{0}'''".format(codecs.getencoder("string_escape")(string)[0].decode("ascii"))
+
 else:
     _iteritems = lambda x: x.items()
-    _py_string_encoding = "unicode_escape"
+
+    _string_escape = repr

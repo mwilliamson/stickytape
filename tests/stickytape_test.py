@@ -155,6 +155,14 @@ def can_explicitly_set_python_interpreter():
         )
 
 
+@istest
+def modules_with_triple_quotes_can_be_bundled():
+    test_script_output(
+        script_path="module_with_triple_quotes/hello",
+        expected_output=b"Hello\n'''\n\"\"\"\n"
+    )
+
+
 def _find_site_packages(root):
     paths = []
 
