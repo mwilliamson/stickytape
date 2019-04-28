@@ -156,6 +156,39 @@ def can_explicitly_set_python_interpreter():
 
 
 @istest
+def python_environment_variables_are_ignored_when_explicitly_setting_python_interpreter():
+    with _temporary_directory() as temp_path:
+        venv_path = os.path.join(temp_path, "venv")
+        _shell.run(["virtualenv", venv_path])
+        site_packages_path = _find_site_packages(venv_path)
+        path_path = os.path.join(site_packages_path, "greetings.pth")
+
+        bad_python_path = os.path.join(venv_path, "pythonpath")
+        bad_import_path = os.path.join(bad_python_path, "greetings/greeting.py")
+        os.makedirs(os.path.dirname(bad_import_path))
+        with open(bad_import_path, "w") as bad_import_path:
+            pass
+
+        with open(path_path, "w") as path_file:
+            path_file.write(find_script("python_path_from_binary/packages\n"))
+
+        original_python_path = os.environ.get("PYTHONPATH")
+        os.environ["PYTHONPATH"] = bad_python_path
+        try:
+
+            test_script_output(
+                script_path="python_path_from_binary/hello",
+                expected_output=b"Hello\n",
+                python_binary=os.path.join(venv_path, "bin/python"),
+            )
+        finally:
+            if original_python_path is None:
+                del os.environ["PYTHONPATH"]
+            else:
+                os.environ["PYTHONPATH"] = original_python_path
+
+
+@istest
 def modules_with_triple_quotes_can_be_bundled():
     test_script_output(
         script_path="module_with_triple_quotes/hello",
