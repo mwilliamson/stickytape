@@ -4,7 +4,7 @@ test:
 	sh -c '. _virtualenv/bin/activate; nosetests tests'
 
 upload:
-	python setup.py sdist upload
+	python setup.py sdist bdist_wheel upload
 	make clean
 
 register:
