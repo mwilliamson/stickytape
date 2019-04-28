@@ -142,7 +142,7 @@ def module_import_is_detected_when_import_is_renamed():
 def can_explicitly_set_python_interpreter():
     with _temporary_directory() as temp_path:
         venv_path = os.path.join(temp_path, "venv")
-        _shell.run(["virtualenv", venv_path])
+        _SHELL.run(["virtualenv", venv_path])
         site_packages_path = _find_site_packages(venv_path)
         path_path = os.path.join(site_packages_path, "greetings.pth")
         with open(path_path, "w") as path_file:
@@ -158,19 +158,19 @@ def can_explicitly_set_python_interpreter():
 def _find_site_packages(root):
     paths = []
 
-    for dir_path, dir_names, file_names in os.walk(root):
+    for dir_path, dir_names, _ in os.walk(root):
         for dir_name in dir_names:
             if dir_name == "site-packages":
                 paths.append(os.path.join(dir_path, dir_name))
 
     if len(paths) == 1:
         return paths[0]
-    else:
-        raise ValueError("Multiple site-packages found: {}".format(paths))
+
+    raise ValueError("Multiple site-packages found: {}".format(paths))
 
 
 
-_shell = spur.LocalShell()
+_SHELL = spur.LocalShell()
 
 
 @nottest
@@ -178,7 +178,7 @@ def test_script_output(script_path, expected_output, **kwargs):
     result = stickytape.script(find_script(script_path), **kwargs)
     with _temporary_script(result) as script_file_path:
         try:
-            output = _shell.run([script_file_path]).output
+            output = _SHELL.run([script_file_path]).output
         except:
             for index, line in enumerate(result.splitlines()):
                 print((index + 1), line)
@@ -196,7 +196,7 @@ def _temporary_script(contents):
         with open(path, "w") as script_file:
             script_file.write(contents)
 
-        _shell.run(["chmod", "+x", path])
+        _SHELL.run(["chmod", "+x", path])
         yield path
 
 

@@ -1,6 +1,5 @@
 import argparse
 import sys
-import subprocess
 
 import stickytape
 
@@ -14,8 +13,8 @@ def main():
 def _open_output(args):
     if args.output_file is None:
         return sys.stdout
-    else:
-        return open(args.output_file, "w")
+
+    return open(args.output_file, "w")
 
 def _parse_args():
     parser = argparse.ArgumentParser()
@@ -27,4 +26,3 @@ def _parse_args():
 
 if __name__ == "__main__":
     main()
-

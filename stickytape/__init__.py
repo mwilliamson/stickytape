@@ -5,8 +5,12 @@ import ast
 import sys
 
 
-def script(path, add_python_paths=[], python_binary=None):
-    python_paths = [os.path.dirname(path)] + add_python_paths + _read_sys_path_from_python_bin(python_binary)
+def script(path, add_python_paths=None, python_binary=None):
+    python_paths = [os.path.dirname(path)]
+    if add_python_paths is not None:
+        python_paths.extend(add_python_paths)
+
+    python_paths.extend(_read_sys_path_from_python_bin(python_binary))
 
     output = []
 
@@ -18,17 +22,16 @@ def script(path, add_python_paths=[], python_binary=None):
 def _read_sys_path_from_python_bin(binary_path):
     if binary_path is None:
         return []
-    else:
-        output = subprocess.check_output(
-            [binary_path, "-c", "import sys;\nfor path in sys.path: print(path)"],
-            env={}
-        )
-        return [
-            # TODO: handle non-UTF-8 encodings
-            line.strip().decode("utf-8")
-            for line in output.split(b"\n")
-            if line.strip()
-        ]
+
+    output = subprocess.check_output(
+        [binary_path, "-c", "import sys;\nfor path in sys.path: print(path)"],
+        env={}
+    )
+    return [
+        # TODO: handle non-UTF-8 encodings
+        line.strip().decode("utf-8")
+        for line in output.split(b"\n") if line.strip()
+    ]
 
 def _indent(string):
     return "    " + string.replace("\n", "\n    ")
@@ -50,7 +53,7 @@ class ModuleWriterGenerator(object):
 
     def build(self):
         output = []
-        for module_path, module_source in _iteritems(self._modules):
+        for module_path, module_source in _ITERITEMS(self._modules):
             output.append("    __stickytape_write_module({0}, {1})\n".format(
                 _string_escape(module_path),
                 _string_escape(module_source)
@@ -104,9 +107,18 @@ class ModuleWriterGenerator(object):
             #~ raise RuntimeError("Could not find module: " + import_line.import_path)
 
     def _find_module(self, importing_python_module, module_path):
-        relative_module_path = os.path.join(os.path.dirname(importing_python_module.absolute_path), module_path)
+        relative_module_path = os.path.join(
+            os.path.dirname(importing_python_module.absolute_path),
+            module_path
+        )
         if os.path.exists(relative_module_path):
-            return ImportTarget(relative_module_path, os.path.join(os.path.dirname(importing_python_module.module_path), module_path))
+            return ImportTarget(
+                relative_module_path,
+                os.path.join(
+                    os.path.dirname(importing_python_module.module_path),
+                    module_path
+                )
+            )
 
         for sys_path in self._sys_path:
             full_module_path = os.path.join(sys_path, module_path)
@@ -136,8 +148,8 @@ def _resolve_package_to_import_path(package):
     import_path = package.replace(".", "/")
     if import_path.startswith("/"):
         return "." + import_path
-    else:
-        return import_path
+
+    return import_path
 
 def _read_file(path):
     with open(path) as file:
@@ -146,10 +158,10 @@ def _read_file(path):
 def _string_escape(string):
     # Let's escape `'` before formatting the source blob within a long string literal.
     string = string.replace('\'', '\\\'')
-    return "'''{0}'''".format(codecs.getencoder(_py_string_encoding)(string)[0].decode("ascii"))
+    return "'''{0}'''".format(codecs.getencoder(_PY_STRING_ENCODING)(string)[0].decode("ascii"))
 
 def _is_stdlib_import(import_line):
-    return import_line.import_path in _stdlib_modules
+    return import_line.import_path in _STDLIB_MODULES
 
 class ImportTarget(object):
     def __init__(self, absolute_path, module_path):
@@ -164,7 +176,7 @@ class ImportLine(object):
         self.import_path = _resolve_package_to_import_path(import_path)
         self.items = items
 
-_stdlib_modules = set([
+_STDLIB_MODULES = set([
     "string",
     "re",
     "struct",
@@ -484,8 +496,8 @@ _stdlib_modules = set([
 
 
 if sys.version_info[0] == 2:
-    _iteritems = lambda x: x.iteritems()
-    _py_string_encoding = "string_escape"
+    _ITERITEMS = lambda x: x.iteritems()
+    _PY_STRING_ENCODING = "string_escape"
 else:
-    _iteritems = lambda x: x.items()
-    _py_string_encoding = "unicode_escape"
+    _ITERITEMS = lambda x: x.items()
+    _PY_STRING_ENCODING = "unicode_escape"
