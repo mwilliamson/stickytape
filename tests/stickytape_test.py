@@ -58,7 +58,7 @@ def can_import_value_from_module_using_from_import_syntax():
 def can_import_multiple_values_from_module_using_from_import_syntax():
     test_script_output(
         script_path="script_using_from_to_import_multiple_values/hello",
-        expected_output=b"Hello\n"
+        expected_output=b"Hello '''some unintended quotes'''\n"
     )
 
 @istest

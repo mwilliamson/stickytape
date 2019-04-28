@@ -144,6 +144,8 @@ def _read_file(path):
         return file.read()
 
 def _string_escape(string):
+    # Let's escape `'` before formatting the source blob within a long string literal.
+    string = string.replace('\'', '\\\'')
     return "'''{0}'''".format(codecs.getencoder(_py_string_encoding)(string)[0].decode("ascii"))
 
 def _is_stdlib_import(import_line):
