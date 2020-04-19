@@ -5,13 +5,23 @@ import ast
 import sys
 
 
-def script(path, add_python_paths=[], python_binary=None):
+def script(path, add_python_modules=None, add_python_paths=None, python_binary=None):
+    if add_python_modules is None:
+        add_python_modules = []
+
+    if add_python_paths is None:
+        add_python_paths = []
+
     python_paths = [os.path.dirname(path)] + add_python_paths + _read_sys_path_from_python_bin(python_binary)
 
     output = []
 
     output.append(_prelude())
-    output.append(_generate_module_writers(path, python_paths))
+    output.append(_generate_module_writers(
+        path,
+        sys_path=python_paths,
+        add_python_modules=add_python_modules,
+    ))
     output.append(_indent(open(path).read()))
     return "".join(output)
 
@@ -37,9 +47,9 @@ def _prelude():
     with open(prelude_path) as prelude_file:
         return prelude_file.read()
 
-def _generate_module_writers(path, sys_path):
+def _generate_module_writers(path, sys_path, add_python_modules):
     generator = ModuleWriterGenerator(sys_path)
-    generator.generate_for_file(path)
+    generator.generate_for_file(path, add_python_modules=add_python_modules)
     return generator.build()
 
 class ModuleWriterGenerator(object):
@@ -56,8 +66,12 @@ class ModuleWriterGenerator(object):
             ))
         return "".join(output)
 
-    def generate_for_file(self, python_file_path):
+    def generate_for_file(self, python_file_path, add_python_modules):
         self._generate_for_module(ImportTarget(python_file_path, "."))
+
+        for add_python_module in add_python_modules:
+            import_line = ImportLine(import_path=add_python_module, items=[])
+            self._generate_for_import(python_module=None, import_line=import_line)
 
     def _generate_for_module(self, python_module):
         import_lines = _find_imports_in_file(python_module.absolute_path)
@@ -103,9 +117,10 @@ class ModuleWriterGenerator(object):
             #~ raise RuntimeError("Could not find module: " + import_line.import_path)
 
     def _find_module(self, importing_python_module, module_path):
-        relative_module_path = os.path.join(os.path.dirname(importing_python_module.absolute_path), module_path)
-        if os.path.exists(relative_module_path):
-            return ImportTarget(relative_module_path, os.path.join(os.path.dirname(importing_python_module.module_path), module_path))
+        if importing_python_module is not None:
+            relative_module_path = os.path.join(os.path.dirname(importing_python_module.absolute_path), module_path)
+            if os.path.exists(relative_module_path):
+                return ImportTarget(relative_module_path, os.path.join(os.path.dirname(importing_python_module.module_path), module_path))
 
         for sys_path in self._sys_path:
             full_module_path = os.path.join(sys_path, module_path)

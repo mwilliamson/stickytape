@@ -23,6 +23,13 @@ sys.path from, for instance the Python binary inside a virtualenv:
 
     stickytape scripts/blah --python-binary _virtualenv/bin/python --output-file /tmp/blah-standalone
 
+Stickytape cannot automatically detect dynamic imports,
+but you can use ``--add-python-module`` to explicitly include modules:
+
+.. code:: sh
+
+    stickytape scripts/blah --add-python-module blah.util
+
 As you might expect with a program that munges source files, there are a
 few caveats:
 

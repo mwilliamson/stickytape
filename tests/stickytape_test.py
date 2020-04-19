@@ -196,6 +196,15 @@ def modules_with_triple_quotes_can_be_bundled():
     )
 
 
+@istest
+def additional_python_modules_can_be_explicitly_included():
+    test_script_output(
+        script_path="script_with_dynamic_import/hello",
+        expected_output=b"Hello\n",
+        add_python_modules=("greeting", ),
+    )
+
+
 def _find_site_packages(root):
     paths = []
 
