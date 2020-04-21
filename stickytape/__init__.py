@@ -5,7 +5,11 @@ import ast
 import sys
 
 
-def script(path, add_python_modules=None, add_python_paths=None, python_binary=None):
+def script(
+        path,
+        add_python_modules=None, add_python_paths=None,
+        python_binary=None,
+        propagate_shebang=False):
     if add_python_modules is None:
         add_python_modules = []
 
@@ -16,6 +20,7 @@ def script(path, add_python_modules=None, add_python_paths=None, python_binary=N
 
     output = []
 
+    output.append(_handle_shebang(path, propagate_shebang))
     output.append(_prelude())
     output.append(_generate_module_writers(
         path,
@@ -41,6 +46,16 @@ def _read_sys_path_from_python_bin(binary_path):
 
 def _indent(string):
     return "    " + string.replace("\n", "\n    ")
+
+def _handle_shebang(path, propagate_shebang):
+    if propagate_shebang:
+        with open(path) as script_file:
+            first_line = script_file.readline()
+            if first_line.startswith("#!"):
+                return first_line
+
+    # When unspecified (or not found), lets the default distribution interpreter be selected.
+    return "#!/usr/bin/env python"
 
 def _prelude():
     prelude_path = os.path.join(os.path.dirname(__file__), "prelude.py")
