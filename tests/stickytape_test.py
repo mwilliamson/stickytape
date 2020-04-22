@@ -210,8 +210,9 @@ def _find_site_packages(root):
 
     for dir_path, dir_names, file_names in os.walk(root):
         for dir_name in dir_names:
-            if dir_name == "site-packages":
-                paths.append(os.path.join(dir_path, dir_name))
+            path = os.path.join(dir_path, dir_name)
+            if dir_name == "site-packages" and os.listdir(path):
+                paths.append(path)
 
     if len(paths) == 1:
         return paths[0]
