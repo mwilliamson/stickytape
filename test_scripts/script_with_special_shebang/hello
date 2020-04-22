@@ -1,0 +1,7 @@
+#!/usr/bin/python3 -Equ
+
+import os
+
+with open(os.path.realpath(__file__)) as f_self_source:
+    if f_self_source.readline().rstrip() == "#!/usr/bin/python3 -Equ":
+        print("Hello")

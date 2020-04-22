@@ -189,6 +189,15 @@ def python_environment_variables_are_ignored_when_explicitly_setting_python_inte
 
 
 @istest
+def can_explicitly_propagate_shebang():
+    test_script_output(
+        script_path="script_with_special_shebang/hello",
+        expected_output=b"Hello\n",
+        propagate_shebang=True
+    )
+
+
+@istest
 def modules_with_triple_quotes_can_be_bundled():
     test_script_output(
         script_path="module_with_triple_quotes/hello",
