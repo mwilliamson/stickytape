@@ -30,6 +30,13 @@ but you can use ``--add-python-module`` to explicitly include modules:
 
     stickytape scripts/blah --add-python-module blah.util
 
+If your entry point contain a specific shebang that should be kept,
+you may pass ``--propagate-shebang`` to Stickytape to do so:
+
+.. code:: sh
+
+    stickytape scripts/blah --propagate-shebang --output-file /tmp/blah-standalone
+
 As you might expect with a program that munges source files, there are a
 few caveats:
 
