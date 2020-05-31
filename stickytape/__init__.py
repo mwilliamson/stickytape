@@ -3,6 +3,7 @@ import codecs
 import subprocess
 import ast
 import sys
+import base64
 
 
 def script(path, add_python_modules=None, add_python_paths=None, python_binary=None):
@@ -62,7 +63,7 @@ class ModuleWriterGenerator(object):
         for module_path, module_source in _iteritems(self._modules):
             output.append("    __stickytape_write_module({0}, {1})\n".format(
                 _string_escape(module_path),
-                _string_escape(module_source)
+                _string_escape(base64.encodebytes(module_source.encode(encoding='utf_8')))
             ))
         return "".join(output)
 
