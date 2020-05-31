@@ -4,24 +4,35 @@ import subprocess
 import ast
 import sys
 import base64
+import pkg_resources
 
-
-def script(path, add_python_modules=None, add_python_paths=None, python_binary=None):
+def script(path, add_python_modules=None, add_python_paths=None, add_resources_modules=None, add_resources_files=None, python_binary=None):
     if add_python_modules is None:
         add_python_modules = []
 
     if add_python_paths is None:
         add_python_paths = []
 
+    if add_resources_modules is None:
+        add_resources_modules = []
+
+    if add_resources_files is None:
+        add_resources_files = []
+
     python_paths = [os.path.dirname(path)] + add_python_paths + _read_sys_path_from_python_bin(python_binary)
 
     output = []
+
+    for p in python_paths:
+        sys.path.insert(0, p)
 
     output.append(_prelude())
     output.append(_generate_module_writers(
         path,
         sys_path=python_paths,
         add_python_modules=add_python_modules,
+        add_resources_modules=add_resources_modules,
+        add_resources_files=add_resources_files
     ))
     output.append(_indent(open(path).read()))
     return "".join(output)
@@ -48,9 +59,11 @@ def _prelude():
     with open(prelude_path) as prelude_file:
         return prelude_file.read()
 
-def _generate_module_writers(path, sys_path, add_python_modules):
+def _generate_module_writers(path, sys_path, add_python_modules, add_resources_modules, add_resources_files):
     generator = ModuleWriterGenerator(sys_path)
     generator.generate_for_file(path, add_python_modules=add_python_modules)
+    generator.generate_for_resources(add_resources_modules=add_resources_modules)
+    generator.generate_for_resources_files(add_resources_files=add_resources_files)
     return generator.build()
 
 class ModuleWriterGenerator(object):
@@ -63,9 +76,22 @@ class ModuleWriterGenerator(object):
         for module_path, module_source in _iteritems(self._modules):
             output.append("    __stickytape_write_module({0}, {1})\n".format(
                 _string_escape(module_path),
-                _string_escape(base64.encodebytes(module_source.encode(encoding='utf_8')))
+                _string_escape(base64.b64encode(module_source))
             ))
         return "".join(output)
+
+    def generate_for_resources(self, add_resources_modules):
+        for module_path in add_resources_modules:
+            self.generate_for_resources_files(
+                [(module_path, resource_name)
+                 for resource_name in pkg_resources.resource_listdir(module_path, '')])
+
+    def generate_for_resources_files(self, add_resources_files):
+        for module_path, resource_name in add_resources_files:
+            resource_path = os.path.join(_resolve_package_to_import_path(module_path), resource_name)
+            if resource_path not in self._modules and not os.path.isdir(resource_path) \
+                    and not resource_path.endswith('.pyc') and not resource_path.endswith('.py'):
+                self._modules[resource_path] = _read_file(pkg_resources.resource_filename(module_path, resource_name))
 
     def generate_for_file(self, python_file_path, add_python_modules):
         self._generate_for_module(ImportTarget(python_file_path, "."))
@@ -155,7 +181,7 @@ def _resolve_package_to_import_path(package):
         return import_path
 
 def _read_file(path):
-    with open(path) as file:
+    with open(path, 'rb') as file:
         return file.read()
 
 def _is_stdlib_import(import_line):
