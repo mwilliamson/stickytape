@@ -2,8 +2,19 @@ stickytape: Convert Python packages into a single script
 ========================================================
 
 Stickytape can be used to convert a Python script and any Python modules
-it depends into a single-file Python script. You can tell stickytape
-which directories to search using the ``--add-python-path`` argument.
+it depends on into a single-file Python script.
+
+Installation
+------------
+
+::
+
+    pip install stickytape
+
+Usage
+-----
+
+You can tell stickytape which directories to search using the ``--add-python-path`` argument.
 For instance:
 
 .. code:: sh
