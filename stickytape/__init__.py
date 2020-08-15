@@ -1,7 +1,7 @@
-import os.path
-import codecs
-import subprocess
 import ast
+import codecs
+import os.path
+import subprocess
 import sys
 
 
