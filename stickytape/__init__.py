@@ -509,10 +509,6 @@ _stdlib_modules = set([
 ])
 
 
-if sys.version_info[0] == 3:
-    _stdlib_modules.add("asyncio")
-
-
 if sys.version_info[0] == 2:
     _iteritems = lambda x: x.iteritems()
 
@@ -523,3 +519,5 @@ else:
     _iteritems = lambda x: x.items()
 
     _string_escape = repr
+
+    _stdlib_modules.add("asyncio")
