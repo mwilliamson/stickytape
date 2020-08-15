@@ -22,7 +22,7 @@ def script(
 
     output = []
 
-    output.append(_handle_shebang(path, copy=copy_shebang))
+    output.append(_generate_shebang(path, copy=copy_shebang))
     output.append(_prelude())
     output.append(_generate_module_writers(
         path,
@@ -49,7 +49,7 @@ def _read_sys_path_from_python_bin(binary_path):
 def _indent(string):
     return "    " + string.replace("\n", "\n    ")
 
-def _handle_shebang(path, copy):
+def _generate_shebang(path, copy):
     if copy:
         with open(path) as script_file:
             first_line = script_file.readline()
