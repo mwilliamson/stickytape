@@ -56,7 +56,6 @@ def _handle_shebang(path, copy):
             if first_line.startswith("#!"):
                 return first_line
 
-    # When unspecified (or not found), lets the default distribution interpreter be selected.
     return "#!/usr/bin/env python"
 
 def _prelude():
