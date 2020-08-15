@@ -189,11 +189,11 @@ def python_environment_variables_are_ignored_when_explicitly_setting_python_inte
 
 
 @istest
-def can_explicitly_propagate_shebang():
+def can_explicitly_copy_shebang():
     test_script_output(
         script_path="script_with_special_shebang/hello",
         expected_output=b"Hello\n",
-        propagate_shebang=True
+        copy_shebang=True,
     )
 
 

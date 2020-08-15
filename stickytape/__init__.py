@@ -6,10 +6,12 @@ import sys
 
 
 def script(
-        path,
-        add_python_modules=None, add_python_paths=None,
-        python_binary=None,
-        propagate_shebang=False):
+    path,
+    add_python_modules=None,
+    add_python_paths=None,
+    python_binary=None,
+    copy_shebang=False,
+):
     if add_python_modules is None:
         add_python_modules = []
 
@@ -20,7 +22,7 @@ def script(
 
     output = []
 
-    output.append(_handle_shebang(path, propagate_shebang))
+    output.append(_handle_shebang(path, copy=copy_shebang))
     output.append(_prelude())
     output.append(_generate_module_writers(
         path,
@@ -47,8 +49,8 @@ def _read_sys_path_from_python_bin(binary_path):
 def _indent(string):
     return "    " + string.replace("\n", "\n    ")
 
-def _handle_shebang(path, propagate_shebang):
-    if propagate_shebang:
+def _handle_shebang(path, copy):
+    if copy:
         with open(path) as script_file:
             first_line = script_file.readline()
             if first_line.startswith("#!"):
