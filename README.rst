@@ -41,8 +41,10 @@ but you can use ``--add-python-module`` to explicitly include modules:
 
     stickytape scripts/blah --add-python-module blah.util
 
-If your entry point contain a specific shebang that should be kept,
-you may pass ``--copy-shebang`` to Stickytape to do so:
+By default, stickytape will ignore the shebang in the script
+and use ``"#!/usr/bin/env python"`` in the output file.
+To copy the shebang from the original script,
+use ``--copy-shebang``:
 
 .. code:: sh
 
