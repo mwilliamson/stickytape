@@ -192,7 +192,7 @@ def python_environment_variables_are_ignored_when_explicitly_setting_python_inte
 def can_explicitly_copy_shebang():
     test_script_output(
         script_path="script_with_special_shebang/hello",
-        expected_output=b"Hello\n",
+        expected_output=b"1\n",
         copy_shebang=True,
     )
 

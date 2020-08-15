@@ -1,7 +1,5 @@
-#!/usr/bin/python3 -Equ
+#!/usr/bin/python -E
 
-import os
+import sys
 
-with open(os.path.realpath(__file__)) as f_self_source:
-    if f_self_source.readline().rstrip() == "#!/usr/bin/python3 -Equ":
-        print("Hello")
+print(sys.flags.ignore_environment)
