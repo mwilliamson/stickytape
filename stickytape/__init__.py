@@ -107,7 +107,7 @@ class ModuleWriterGenerator(object):
     def _read_possible_import_targets(self, python_module, import_line):
         import_path_parts = import_line.import_path.split("/")
         possible_init_module_paths = [
-            os.path.join(os.path.join(*import_path_parts[0:index + 1]), "__init__.py")
+            posixpath.join(posixpath.join(*import_path_parts[0:index + 1]), "__init__.py")
             for index in range(len(import_path_parts))
         ]
 
@@ -115,8 +115,8 @@ class ModuleWriterGenerator(object):
 
         for item in import_line.items:
             possible_module_paths += [
-                os.path.join(import_line.import_path, item + ".py"),
-                os.path.join(import_line.import_path, item, "__init__.py")
+                posixpath.join(import_line.import_path, item + ".py"),
+                posixpath.join(import_line.import_path, item, "__init__.py")
             ]
 
         import_targets = [
