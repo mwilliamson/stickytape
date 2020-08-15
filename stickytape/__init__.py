@@ -1,6 +1,7 @@
 import ast
 import codecs
 import os.path
+import posixpath
 import subprocess
 import sys
 
@@ -179,7 +180,7 @@ def _is_stdlib_import(import_line):
 class ImportTarget(object):
     def __init__(self, absolute_path, module_path):
         self.absolute_path = absolute_path
-        self.module_path = os.path.normpath(module_path)
+        self.module_path = posixpath.normpath(module_path)
 
     def read(self):
         return _read_file(self.absolute_path)
