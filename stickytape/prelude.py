@@ -24,7 +24,8 @@ with __stickytape_temporary_dir() as __stickytape_working_dir:
                 partial_path = os.path.join(partial_path, part)
                 if not os.path.exists(partial_path):
                     os.mkdir(partial_path)
-                    open(os.path.join(partial_path, "__init__.py"), "w").write("\n")
+                    with open(os.path.join(partial_path, "__init__.py"), "w") as f:
+                        f.write("\n")
 
         make_package(os.path.dirname(path))
 
