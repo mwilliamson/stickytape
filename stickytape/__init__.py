@@ -509,6 +509,10 @@ _stdlib_modules = set([
 ])
 
 
+if sys.version_info[0] == 3:
+    _stdlib_modules.add("asyncio")
+
+
 if sys.version_info[0] == 2:
     _iteritems = lambda x: x.iteritems()
 
