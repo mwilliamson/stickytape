@@ -180,7 +180,7 @@ def _is_stdlib_import(import_line):
 class ImportTarget(object):
     def __init__(self, absolute_path, module_path):
         self.absolute_path = absolute_path
-        self.module_path = posixpath.normpath(module_path)
+        self.module_path = posixpath.normpath(module_path.replace("\\", "/"))
 
     def read(self):
         return _read_file(self.absolute_path)

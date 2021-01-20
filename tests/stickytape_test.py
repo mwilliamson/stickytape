@@ -2,6 +2,7 @@ import os
 import os.path
 import tempfile
 import contextlib
+import platform
 import subprocess
 import shutil
 import sys
@@ -151,7 +152,7 @@ def can_explicitly_set_python_interpreter():
         test_script_output(
             script_path="python_path_from_binary/hello",
             expected_output=b"Hello\n",
-            python_binary=os.path.join(venv_path, "bin/python"),
+            python_binary=_venv_python_binary_path(venv_path),
         )
 
 
@@ -179,7 +180,7 @@ def python_environment_variables_are_ignored_when_explicitly_setting_python_inte
             test_script_output(
                 script_path="python_path_from_binary/hello",
                 expected_output=b"Hello\n",
-                python_binary=os.path.join(venv_path, "bin/python"),
+                python_binary=_venv_python_binary_path(venv_path),
             )
         finally:
             if original_python_path is None:
@@ -238,7 +239,12 @@ def test_script_output(script_path, expected_output, **kwargs):
     result = stickytape.script(find_script(script_path), **kwargs)
     with _temporary_script(result) as script_file_path:
         try:
-            output = _shell.run([script_file_path]).output
+            if _is_windows():
+                command = ["py", script_file_path]
+            else:
+                command = [script_file_path]
+
+            output = _shell.run(command).output.replace(b"\r\n", b"\n")
         except:
             for index, line in enumerate(result.splitlines()):
                 print((index + 1), line)
@@ -267,3 +273,16 @@ def _temporary_directory():
         yield dir_path
     finally:
         shutil.rmtree(dir_path)
+
+
+def _venv_python_binary_path(venv_path):
+    if _is_windows():
+        bin_directory = "Scripts"
+    else:
+        bin_directory = "bin"
+
+    return os.path.join(venv_path, bin_directory, "python")
+
+
+def _is_windows():
+    return platform.system() == "Windows"
