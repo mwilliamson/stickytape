@@ -335,6 +335,7 @@ _stdlib_modules = set([
     "sgmllib",
     "htmllib",
     "htmlentitydefs",
+    "xml",
     "xml/etree/ElementTree",
     "xml/dom",
     "xml/dom/minidom",
