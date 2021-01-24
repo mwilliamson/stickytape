@@ -6,6 +6,8 @@ it depends on into a single-file Python script.
 
 Since this relies on correctly analysing both your script and any dependent modules,
 this may not work correctly in all circumstances.
+I bodged together the code a long time ago for a specific use case I had,
+so many normal uses of Python imports are not properly supported.
 If you need to create a standalone executable from your Python script,
 I recommend using an alternative such as `PyInstaller <http://www.pyinstaller.org/>`_.
 
