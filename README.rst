@@ -7,7 +7,7 @@ it depends on into a single-file Python script.
 Since this relies on correctly analysing both your script and any dependent modules,
 this may not work correctly in all circumstances.
 If you need to create a standalone executable from your Python script,
-I recommend using an alternative such as [PyInstaller](http://www.pyinstaller.org/).
+I recommend using an alternative such as `PyInstaller <http://www.pyinstaller.org/>`_.
 
 Installation
 ------------
