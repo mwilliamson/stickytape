@@ -101,16 +101,6 @@ def circular_references_dont_cause_stack_overflow():
     )
 
 @istest
-def implicitly_relative_imports_are_resolved_correctly():
-    if sys.version_info[0] == 3:
-        # Python 3 removed implicit relative imports
-        return
-    test_script_output(
-        script_path="implicit_relative_import/hello",
-        expected_output=b"Hello\n"
-    )
-
-@istest
 def explicit_relative_imports_with_single_dot_are_resolved_correctly():
     test_script_output(
         script_path="explicit_relative_import_single_dot/hello",
