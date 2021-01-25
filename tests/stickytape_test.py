@@ -3,6 +3,7 @@ import os.path
 import tempfile
 import contextlib
 import platform
+import re
 import subprocess
 import shutil
 import sys
@@ -25,6 +26,15 @@ def stdlib_imports_are_not_modified():
     test_script_output(
         script_path="single_file_using_stdlib/hello",
         expected_output=b"f7ff9e8b7bb2e09b70935a5d785e0cc5d9d0abf0\n"
+    )
+
+@istest
+def stdlib_module_in_package_is_not_generated():
+    test_script_output(
+        script_path="script_using_stdlib_module_in_package/hello",
+        expected_output=b"xml.etree.ElementTree\nHello\n",
+        expected_modules=["greeting"],
+        python_binary=sys.executable,
     )
 
 @istest
@@ -235,8 +245,13 @@ _shell = spur.LocalShell()
 
 
 @nottest
-def test_script_output(script_path, expected_output, **kwargs):
+def test_script_output(script_path, expected_output, expected_modules=None, **kwargs):
     result = stickytape.script(find_script(script_path), **kwargs)
+
+    if expected_modules is not None:
+        actual_modules = set(re.findall(r"__stickytape_write_module\('([^']*)\.py'", result))
+        assert_equal(set(expected_modules), actual_modules)
+
     with _temporary_script(result) as script_file_path:
         try:
             if _is_windows():

@@ -89,7 +89,7 @@ class ModuleWriterGenerator(object):
         self._generate_for_module(ImportTarget(python_file_path, "."))
 
         for add_python_module in add_python_modules:
-            import_line = ImportLine(import_path=add_python_module, items=[])
+            import_line = ImportLine(module_name=add_python_module, items=[])
             self._generate_for_import(python_module=None, import_line=import_line)
 
     def _generate_for_module(self, python_module):
@@ -107,18 +107,19 @@ class ModuleWriterGenerator(object):
                 self._generate_for_module(import_target)
 
     def _read_possible_import_targets(self, python_module, import_line):
-        import_path_parts = import_line.import_path.split("/")
+        import_path = _resolve_package_to_import_path(import_line.module_name)
+        import_path_parts = import_path.split("/")
         possible_init_module_paths = [
             posixpath.join(posixpath.join(*import_path_parts[0:index + 1]), "__init__.py")
             for index in range(len(import_path_parts))
         ]
 
-        possible_module_paths = [import_line.import_path + ".py"] + possible_init_module_paths
+        possible_module_paths = [import_path + ".py"] + possible_init_module_paths
 
         for item in import_line.items:
             possible_module_paths += [
-                posixpath.join(import_line.import_path, item + ".py"),
-                posixpath.join(import_line.import_path, item, "__init__.py")
+                posixpath.join(import_path, item + ".py"),
+                posixpath.join(import_path, item, "__init__.py")
             ]
 
         import_targets = [
@@ -177,7 +178,7 @@ def _read_file(path):
         return file.read()
 
 def _is_stdlib_import(import_line):
-    return is_stdlib_module(import_line.import_path)
+    return is_stdlib_module(import_line.module_name)
 
 class ImportTarget(object):
     def __init__(self, absolute_path, module_path):
@@ -188,8 +189,8 @@ class ImportTarget(object):
         return _read_file(self.absolute_path)
 
 class ImportLine(object):
-    def __init__(self, import_path, items):
-        self.import_path = _resolve_package_to_import_path(import_path)
+    def __init__(self, module_name, items):
+        self.module_name = module_name
         self.items = items
 
 
