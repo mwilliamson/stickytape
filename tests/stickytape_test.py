@@ -118,9 +118,23 @@ def explicit_relative_imports_with_single_dot_are_resolved_correctly():
     )
 
 @istest
-def explicit_relative_imports_are_resolved_correctly():
+def explicit_relative_imports_with_single_dot_in_package_init_are_resolved_correctly():
+    test_script_output(
+        script_path="explicit_relative_import_single_dot_in_init/hello",
+        expected_output=b"Hello\n"
+    )
+
+@istest
+def explicit_relative_imports_with_module_name_are_resolved_correctly():
     test_script_output(
         script_path="explicit_relative_import/hello",
+        expected_output=b"Hello\n"
+    )
+
+@istest
+def explicit_relative_imports_with_module_name_in_package_init_are_resolved_correctly():
+    test_script_output(
+        script_path="explicit_relative_import_in_init/hello",
         expected_output=b"Hello\n"
     )
 

@@ -78,7 +78,7 @@ class ModuleWriterGenerator(object):
 
     def build(self):
         output = []
-        for module_path, module_source in _iteritems(self._modules):
+        for module_path, module_source in self._modules.values():
             output.append("    __stickytape_write_module({0}, {1})\n".format(
                 _string_escape(module_path),
                 _string_escape(module_source)
@@ -86,14 +86,14 @@ class ModuleWriterGenerator(object):
         return "".join(output)
 
     def generate_for_file(self, python_file_path, add_python_modules):
-        self._generate_for_module(ImportTarget(python_file_path, "."))
+        self._generate_for_module(ImportTarget(python_file_path, relative_path=None, is_package=False, module_name=None))
 
         for add_python_module in add_python_modules:
             import_line = ImportLine(module_name=add_python_module, items=[])
             self._generate_for_import(python_module=None, import_line=import_line)
 
     def _generate_for_module(self, python_module):
-        import_lines = _find_imports_in_file(python_module.absolute_path)
+        import_lines = _find_imports_in_module(python_module)
         for import_line in import_lines:
             if not _is_stdlib_import(import_line):
                 self._generate_for_import(python_module, import_line)
@@ -102,29 +102,24 @@ class ModuleWriterGenerator(object):
         import_targets = self._read_possible_import_targets(python_module, import_line)
 
         for import_target in import_targets:
-            if import_target.module_path not in self._modules:
-                self._modules[import_target.module_path] = import_target.read()
+            if import_target.module_name not in self._modules:
+                self._modules[import_target.module_name] = (import_target.relative_path, import_target.read())
                 self._generate_for_module(import_target)
 
     def _read_possible_import_targets(self, python_module, import_line):
-        import_path = _resolve_package_to_import_path(import_line.module_name)
-        import_path_parts = import_path.split("/")
-        possible_init_module_paths = [
-            posixpath.join(posixpath.join(*import_path_parts[0:index + 1]), "__init__.py")
-            for index in range(len(import_path_parts))
+        module_name_parts = import_line.module_name.split(".")
+
+        module_names = [
+            ".".join(module_name_parts[0:index + 1])
+            for index in range(len(module_name_parts))
+        ] + [
+            import_line.module_name + "." + item
+            for item in import_line.items
         ]
 
-        possible_module_paths = [import_path + ".py"] + possible_init_module_paths
-
-        for item in import_line.items:
-            possible_module_paths += [
-                posixpath.join(import_path, item + ".py"),
-                posixpath.join(import_path, item, "__init__.py")
-            ]
-
         import_targets = [
-            self._find_module(python_module, module_path)
-            for module_path in possible_module_paths
+            self._find_module(module_name)
+            for module_name in module_names
         ]
 
         valid_import_targets = [target for target in import_targets if target is not None]
@@ -136,22 +131,29 @@ class ModuleWriterGenerator(object):
         #~ else:
             #~ raise RuntimeError("Could not find module: " + import_line.import_path)
 
-    def _find_module(self, importing_python_module, module_path):
-        if importing_python_module is not None:
-            relative_module_path = os.path.join(os.path.dirname(importing_python_module.absolute_path), module_path)
-            if os.path.exists(relative_module_path):
-                return ImportTarget(relative_module_path, os.path.join(os.path.dirname(importing_python_module.module_path), module_path))
-
+    def _find_module(self, module_name):
         for sys_path in self._sys_path:
-            full_module_path = os.path.join(sys_path, module_path)
-            if os.path.exists(full_module_path):
-                return ImportTarget(full_module_path, module_path)
+            for is_package in (True, False):
+                if is_package:
+                    suffix = "/__init__.py"
+                else:
+                    suffix = ".py"
+
+                relative_path = module_name.replace(".", "/") + suffix
+                full_module_path = os.path.join(sys_path, relative_path)
+                if os.path.exists(full_module_path):
+                    return ImportTarget(
+                        full_module_path,
+                        relative_path=relative_path,
+                        is_package=is_package,
+                        module_name=module_name,
+                    )
         return None
 
 
-def _find_imports_in_file(file_path):
-    source = _read_file(file_path)
-    parse_tree = ast.parse(source, file_path)
+def _find_imports_in_module(python_module):
+    source = _read_file(python_module.absolute_path)
+    parse_tree = ast.parse(source, python_module.absolute_path)
 
     for node in ast.walk(parse_tree):
         if isinstance(node, ast.Import):
@@ -159,19 +161,22 @@ def _find_imports_in_file(file_path):
                 yield ImportLine(name.name, [])
 
         if isinstance(node, ast.ImportFrom):
-            if node.module is None:
-                module = "."
-            else:
+            if node.level == 0:
                 module = node.module
+            else:
+                # TODO: handle node.level != 1
+                if python_module.is_package:
+                    package_name = python_module.module_name
+                else:
+                    package_name = ".".join(python_module.module_name.split(".")[:-1])
+
+                if node.module is None:
+                    module = package_name
+                else:
+                    module = package_name + "." + node.module
+
             yield ImportLine(module, [name.name for name in node.names])
 
-
-def _resolve_package_to_import_path(package):
-    import_path = package.replace(".", "/")
-    if import_path.startswith("/"):
-        return "." + import_path
-    else:
-        return import_path
 
 def _read_file(path):
     with open(path) as file:
@@ -181,9 +186,11 @@ def _is_stdlib_import(import_line):
     return is_stdlib_module(import_line.module_name)
 
 class ImportTarget(object):
-    def __init__(self, absolute_path, module_path):
+    def __init__(self, absolute_path, relative_path, is_package, module_name):
         self.absolute_path = absolute_path
-        self.module_path = posixpath.normpath(module_path.replace("\\", "/"))
+        self.relative_path = relative_path
+        self.is_package = is_package
+        self.module_name = module_name
 
     def read(self):
         return _read_file(self.absolute_path)
