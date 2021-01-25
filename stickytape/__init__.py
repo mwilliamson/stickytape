@@ -164,11 +164,15 @@ def _find_imports_in_module(python_module):
             if node.level == 0:
                 module = node.module
             else:
-                # TODO: handle node.level != 1
+                level = node.level
+
                 if python_module.is_package:
+                    level -= 1
+
+                if level == 0:
                     package_name = python_module.module_name
                 else:
-                    package_name = ".".join(python_module.module_name.split(".")[:-1])
+                    package_name = ".".join(python_module.module_name.split(".")[:-level])
 
                 if node.module is None:
                     module = package_name
