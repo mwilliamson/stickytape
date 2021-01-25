@@ -336,6 +336,7 @@ _stdlib_modules = set([
     "htmllib",
     "htmlentitydefs",
     "xml",
+    "xml/etree",
     "xml/etree/ElementTree",
     "xml/dom",
     "xml/dom/minidom",
@@ -344,6 +345,7 @@ _stdlib_modules = set([
     "xml/sax/handler",
     "xml/sax/saxutils",
     "xml/sax/xmlreader",
+    "xml/parsers",
     "xml/parsers/expat",
 
     "webbrowser",
