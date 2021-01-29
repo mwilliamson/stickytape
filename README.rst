@@ -60,6 +60,13 @@ use ``--copy-shebang``:
 As you might expect with a program that munges source files, there are a
 few caveats:
 
+-  Due to the way that stickytape generates the output file, your script
+   source file should be encoded using UTF-8. If your script doesn't declare
+   its encoding in its first two lines, then it will be UTF-8 by default
+   as of Python 3.
+
+-  Your script shouldn't have any ``from __future__`` imports.
+
 -  Anything that relies on the specific location of files will probably
    no longer work. In other words, ``__file__`` probably isn't all that
    useful.
