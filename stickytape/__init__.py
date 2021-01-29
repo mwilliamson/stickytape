@@ -29,7 +29,8 @@ def script(
         sys_path=python_paths,
         add_python_modules=add_python_modules,
     ))
-    output.append(_indent(open(path).read()))
+    with _open_source_file(path) as source_file:
+        output.append(_indent(source_file.read()))
     return "".join(output)
 
 def _read_sys_path_from_python_bin(binary_path):
@@ -51,7 +52,7 @@ def _indent(string):
 
 def _generate_shebang(path, copy):
     if copy:
-        with open(path) as script_file:
+        with _open_source_file(path) as script_file:
             first_line = script_file.readline()
             if first_line.startswith("#!"):
                 return first_line
@@ -182,6 +183,11 @@ def _find_imports_in_module(python_module):
 def _read_binary(path):
     with open(path, "rb") as file:
         return file.read()
+
+
+def _open_source_file(path):
+    return open(path, "rt", encoding="utf-8")
+
 
 def _is_stdlib_import(import_line):
     return is_stdlib_module(import_line.module_name)
