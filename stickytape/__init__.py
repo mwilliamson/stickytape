@@ -60,7 +60,7 @@ def _generate_shebang(path, copy):
 
 def _prelude():
     prelude_path = os.path.join(os.path.dirname(__file__), "prelude.py")
-    with open(prelude_path) as prelude_file:
+    with open(prelude_path, encoding="utf-8") as prelude_file:
         return prelude_file.read()
 
 def _generate_module_writers(path, sys_path, add_python_modules):
@@ -100,7 +100,7 @@ class ModuleWriterGenerator(object):
 
         for import_target in import_targets:
             if import_target.module_name not in self._modules:
-                self._modules[import_target.module_name] = (import_target.relative_path, import_target.read())
+                self._modules[import_target.module_name] = (import_target.relative_path, import_target.read_binary())
                 self._generate_for_module(import_target)
 
     def _read_possible_import_targets(self, python_module, import_line):
@@ -149,7 +149,7 @@ class ModuleWriterGenerator(object):
 
 
 def _find_imports_in_module(python_module):
-    source = _read_file(python_module.absolute_path)
+    source = _read_binary(python_module.absolute_path)
     parse_tree = ast.parse(source, python_module.absolute_path)
 
     for node in ast.walk(parse_tree):
@@ -179,8 +179,8 @@ def _find_imports_in_module(python_module):
             yield ImportLine(module, [name.name for name in node.names])
 
 
-def _read_file(path):
-    with open(path) as file:
+def _read_binary(path):
+    with open(path, "rb") as file:
         return file.read()
 
 def _is_stdlib_import(import_line):
@@ -193,8 +193,8 @@ class ImportTarget(object):
         self.is_package = is_package
         self.module_name = module_name
 
-    def read(self):
-        return _read_file(self.absolute_path)
+    def read_binary(self):
+        return _read_binary(self.absolute_path)
 
 class ImportLine(object):
     def __init__(self, module_name, items):
