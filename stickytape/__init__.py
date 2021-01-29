@@ -1,9 +1,6 @@
 import ast
-import codecs
 import os.path
-import posixpath
 import subprocess
-import sys
 
 from .stdlib import is_stdlib_module
 
@@ -80,8 +77,8 @@ class ModuleWriterGenerator(object):
         output = []
         for module_path, module_source in self._modules.values():
             output.append("    __stickytape_write_module({0}, {1})\n".format(
-                _string_escape(module_path),
-                _string_escape(module_source)
+                repr(module_path),
+                repr(module_source)
             ))
         return "".join(output)
 
@@ -203,15 +200,3 @@ class ImportLine(object):
     def __init__(self, module_name, items):
         self.module_name = module_name
         self.items = items
-
-
-if sys.version_info[0] == 2:
-    _iteritems = lambda x: x.iteritems()
-
-    def _string_escape(string):
-        return "'''{0}'''".format(codecs.getencoder("string_escape")(string)[0].decode("ascii"))
-
-else:
-    _iteritems = lambda x: x.items()
-
-    _string_escape = repr
