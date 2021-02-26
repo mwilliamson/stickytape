@@ -3,13 +3,19 @@ stickytape: Convert Python packages into a single script
 
 Stickytape can be used to convert a Python script and any Python modules
 it depends on into a single-file Python script.
+There are likely better alternatives depending on what you're trying to do.
+For instance:
 
-Since this relies on correctly analysing both your script and any dependent modules,
-this may not work correctly in all circumstances.
+* If you want to create a single file that can be executed by a Python interpreter,
+  use `zipapp <https://docs.python.org/3/library/zipapp.html>`_.
+
+* If you need to create a standalone executable from your Python script,
+  I recommend using an alternative such as `PyInstaller <http://www.pyinstaller.org/>`_.
+
+Since Stickytape relies on correctly analysing both your script and any dependent modules,
+it may not work correctly in all circumstances.
 I bodged together the code a long time ago for a specific use case I had,
 so many normal uses of Python imports are not properly supported.
-If you need to create a standalone executable from your Python script,
-I recommend using an alternative such as `PyInstaller <http://www.pyinstaller.org/>`_.
 
 Installation
 ------------
