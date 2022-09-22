@@ -1,3 +1,2 @@
-nose==1.2.1
-spur.local>=0.3.7,<0.4
+pytest==7.0.1
 virtualenv

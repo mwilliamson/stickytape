@@ -1,7 +1,7 @@
 .PHONY: test upload clean bootstrap
 
 test:
-	sh -c '. _virtualenv/bin/activate; nosetests tests'
+	sh -c '. _virtualenv/bin/activate; python -m pytest tests'
 
 upload:
 	_virtualenv/bin/python setup.py sdist bdist_wheel upload

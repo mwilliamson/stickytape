@@ -3,3 +3,7 @@ _virtualenv
 /.tox
 /MANIFEST
 /*.egg-info
+.idea/
+.vscode/
+build/
+dist/
