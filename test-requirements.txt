@@ -1,3 +1,2 @@
 pytest
-spur.local>=0.3.7,<0.4
 virtualenv

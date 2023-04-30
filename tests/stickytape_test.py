@@ -8,8 +8,6 @@ import subprocess
 import shutil
 import sys
 
-import spur
-
 import stickytape
 from test_scripts import root as test_script_root
 
@@ -158,7 +156,7 @@ def test_module_import_is_detected_when_import_is_renamed():
 def test_can_explicitly_set_python_interpreter():
     with _temporary_directory() as temp_path:
         venv_path = os.path.join(temp_path, "venv")
-        _shell.run(["virtualenv", venv_path])
+        subprocess.run(["virtualenv", venv_path])
         site_packages_path = _find_site_packages(venv_path)
         path_path = os.path.join(site_packages_path, "greetings.pth")
         with open(path_path, "w") as path_file:
@@ -174,7 +172,7 @@ def test_can_explicitly_set_python_interpreter():
 def test_python_environment_variables_are_ignored_when_explicitly_setting_python_interpreter():
     with _temporary_directory() as temp_path:
         venv_path = os.path.join(temp_path, "venv")
-        _shell.run(["virtualenv", venv_path])
+        subprocess.run(["virtualenv", venv_path])
         site_packages_path = _find_site_packages(venv_path)
         path_path = os.path.join(site_packages_path, "greetings.pth")
 
@@ -241,10 +239,6 @@ def _find_site_packages(root):
         raise ValueError("Multiple site-packages found: {}".format(paths))
 
 
-
-_shell = spur.LocalShell()
-
-
 def assert_script_output(script_path, expected_output, expected_modules=None, **kwargs):
     result = stickytape.script(find_script(script_path), **kwargs)
 
@@ -259,7 +253,7 @@ def assert_script_output(script_path, expected_output, expected_modules=None, **
             else:
                 command = [script_file_path]
 
-            output = _shell.run(command).output.replace(b"\r\n", b"\n")
+            output = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout.replace(b"\r\n", b"\n")
         except:
             for index, line in enumerate(result.splitlines()):
                 print((index + 1), line)
@@ -277,7 +271,7 @@ def _temporary_script(contents):
         with open(path, "w") as script_file:
             script_file.write(contents)
 
-        _shell.run(["chmod", "+x", path])
+        subprocess.run(["chmod", "+x", path])
         yield path
 
 
