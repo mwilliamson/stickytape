@@ -13,7 +13,7 @@ setup(
     long_description=read("README.rst"),
     author='Michael Williamson',
     author_email='mike@zwobble.org',
-    url='http://github.com/mwilliamson/stickytape',
+    url='https://github.com/mwilliamson/stickytape',
     packages=['stickytape'],
     python_requires='>=3.5',
     license="BSD-2-Clause",
