@@ -8,160 +8,154 @@ import subprocess
 import shutil
 import sys
 
-from nose.tools import istest, nottest, assert_equal
 import spur
 
 import stickytape
 from test_scripts import root as test_script_root
 
-@istest
-def single_file_script_still_works():
-    test_script_output(
+
+def test_single_file_script_still_works():
+    assert_script_output(
         script_path="single_file/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def stdlib_imports_are_not_modified():
-    test_script_output(
+def test_stdlib_imports_are_not_modified():
+    assert_script_output(
         script_path="single_file_using_stdlib/hello",
         expected_output=b"f7ff9e8b7bb2e09b70935a5d785e0cc5d9d0abf0\n"
     )
 
-@istest
-def stdlib_module_in_package_is_not_generated():
-    test_script_output(
+
+def test_stdlib_module_in_package_is_not_generated():
+    assert_script_output(
         script_path="script_using_stdlib_module_in_package/hello",
         expected_output=b"xml.etree.ElementTree\nHello\n",
         expected_modules=["greeting"],
         python_binary=sys.executable,
     )
 
-@istest
-def script_that_imports_local_module_is_converted_to_single_file():
-    test_script_output(
+
+def test_script_that_imports_local_module_is_converted_to_single_file():
+    assert_script_output(
         script_path="script_with_single_local_import/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def script_that_imports_local_package_is_converted_to_single_file():
-    test_script_output(
+
+def test_script_that_imports_local_package_is_converted_to_single_file():
+    assert_script_output(
         script_path="script_with_single_local_import_of_package/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def can_import_module_from_package():
-    test_script_output(
+
+def test_can_import_module_from_package():
+    assert_script_output(
         script_path="script_using_module_in_package/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def can_import_value_from_module_using_from_import_syntax():
-    test_script_output(
+
+def test_can_import_value_from_module_using_from_import_syntax():
+    assert_script_output(
         script_path="script_with_single_local_from_import/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def can_import_multiple_values_from_module_using_from_import_syntax():
-    test_script_output(
+
+def test_can_import_multiple_values_from_module_using_from_import_syntax():
+    assert_script_output(
         script_path="script_using_from_to_import_multiple_values/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def can_import_module_from_package_using_from_import_syntax():
-    test_script_output(
+
+def test_can_import_module_from_package_using_from_import_syntax():
+    assert_script_output(
         script_path="script_using_from_to_import_module/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def can_import_multiple_modules_from_module_using_from_import_syntax():
-    test_script_output(
+
+def test_can_import_multiple_modules_from_module_using_from_import_syntax():
+    assert_script_output(
         script_path="script_using_from_to_import_multiple_modules/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def imported_modules_are_transformed():
-    test_script_output(
+
+def test_imported_modules_are_transformed():
+    assert_script_output(
         script_path="imports_in_imported_modules/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def circular_references_dont_cause_stack_overflow():
-    test_script_output(
+
+def test_circular_references_dont_cause_stack_overflow():
+    assert_script_output(
         script_path="circular_reference/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def explicit_relative_imports_with_single_dot_are_resolved_correctly():
-    test_script_output(
+
+def test_explicit_relative_imports_with_single_dot_are_resolved_correctly():
+    assert_script_output(
         script_path="explicit_relative_import_single_dot/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def explicit_relative_imports_with_single_dot_in_package_init_are_resolved_correctly():
-    test_script_output(
+
+def test_explicit_relative_imports_with_single_dot_in_package_init_are_resolved_correctly():
+    assert_script_output(
         script_path="explicit_relative_import_single_dot_in_init/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def explicit_relative_imports_from_parent_package_are_resolved_correctly():
-    test_script_output(
+
+def test_explicit_relative_imports_from_parent_package_are_resolved_correctly():
+    assert_script_output(
         script_path="explicit_relative_import_from_parent_package/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def explicit_relative_imports_with_module_name_are_resolved_correctly():
-    test_script_output(
+
+def test_explicit_relative_imports_with_module_name_are_resolved_correctly():
+    assert_script_output(
         script_path="explicit_relative_import/hello",
         expected_output=b"Hello\n"
     )
 
-@istest
-def explicit_relative_imports_with_module_name_in_package_init_are_resolved_correctly():
-    test_script_output(
+
+def test_explicit_relative_imports_with_module_name_in_package_init_are_resolved_correctly():
+    assert_script_output(
         script_path="explicit_relative_import_in_init/hello",
         expected_output=b"Hello\n"
     )
 
 
-@istest
-def package_init_can_be_used_even_if_not_imported_explicitly():
-    test_script_output(
+def test_package_init_can_be_used_even_if_not_imported_explicitly():
+    assert_script_output(
         script_path="implicit_init_import/hello",
         expected_output=b"Hello\n"
     )
 
 
-@istest
-def value_import_is_detected_when_import_is_renamed():
-    test_script_output(
+def test_value_import_is_detected_when_import_is_renamed():
+    assert_script_output(
         script_path="import_from_as_value/hello",
         expected_output=b"Hello\n"
     )
 
 
-@istest
-def module_import_is_detected_when_import_is_renamed():
-    test_script_output(
+def test_module_import_is_detected_when_import_is_renamed():
+    assert_script_output(
         script_path="import_from_as_module/hello",
         expected_output=b"Hello\n"
     )
 
 
-@istest
-def can_explicitly_set_python_interpreter():
+def test_can_explicitly_set_python_interpreter():
     with _temporary_directory() as temp_path:
         venv_path = os.path.join(temp_path, "venv")
         _shell.run(["virtualenv", venv_path])
@@ -170,15 +164,14 @@ def can_explicitly_set_python_interpreter():
         with open(path_path, "w") as path_file:
             path_file.write(find_script("python_path_from_binary/packages\n"))
 
-        test_script_output(
+        assert_script_output(
             script_path="python_path_from_binary/hello",
             expected_output=b"Hello\n",
             python_binary=_venv_python_binary_path(venv_path),
         )
 
 
-@istest
-def python_environment_variables_are_ignored_when_explicitly_setting_python_interpreter():
+def test_python_environment_variables_are_ignored_when_explicitly_setting_python_interpreter():
     with _temporary_directory() as temp_path:
         venv_path = os.path.join(temp_path, "venv")
         _shell.run(["virtualenv", venv_path])
@@ -198,7 +191,7 @@ def python_environment_variables_are_ignored_when_explicitly_setting_python_inte
         os.environ["PYTHONPATH"] = bad_python_path
         try:
 
-            test_script_output(
+            assert_script_output(
                 script_path="python_path_from_binary/hello",
                 expected_output=b"Hello\n",
                 python_binary=_venv_python_binary_path(venv_path),
@@ -210,26 +203,23 @@ def python_environment_variables_are_ignored_when_explicitly_setting_python_inte
                 os.environ["PYTHONPATH"] = original_python_path
 
 
-@istest
-def can_explicitly_copy_shebang():
-    test_script_output(
+def test_can_explicitly_copy_shebang():
+    assert_script_output(
         script_path="script_with_special_shebang/hello",
         expected_output=b"1\n",
         copy_shebang=True,
     )
 
 
-@istest
-def modules_with_triple_quotes_can_be_bundled():
-    test_script_output(
+def test_modules_with_triple_quotes_can_be_bundled():
+    assert_script_output(
         script_path="module_with_triple_quotes/hello",
         expected_output=b"Hello\n'''\n\"\"\"\n"
     )
 
 
-@istest
-def additional_python_modules_can_be_explicitly_included():
-    test_script_output(
+def test_additional_python_modules_can_be_explicitly_included():
+    assert_script_output(
         script_path="script_with_dynamic_import/hello",
         expected_output=b"Hello\n",
         add_python_modules=("greeting", ),
@@ -255,13 +245,12 @@ def _find_site_packages(root):
 _shell = spur.LocalShell()
 
 
-@nottest
-def test_script_output(script_path, expected_output, expected_modules=None, **kwargs):
+def assert_script_output(script_path, expected_output, expected_modules=None, **kwargs):
     result = stickytape.script(find_script(script_path), **kwargs)
 
     if expected_modules is not None:
         actual_modules = set(re.findall(r"__stickytape_write_module\('([^']*)\.py'", result))
-        assert_equal(set(expected_modules), actual_modules)
+        assert set(expected_modules) == actual_modules
 
     with _temporary_script(result) as script_file_path:
         try:
@@ -275,7 +264,7 @@ def test_script_output(script_path, expected_output, expected_modules=None, **kw
             for index, line in enumerate(result.splitlines()):
                 print((index + 1), line)
             raise
-        assert_equal(expected_output, output)
+        assert expected_output == output
 
 
 def find_script(path):

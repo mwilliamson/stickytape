@@ -1,7 +1,7 @@
 .PHONY: test
 
 test:
-	sh -c '. _virtualenv/bin/activate; nosetests tests'
+	sh -c '. _virtualenv/bin/activate; py.test tests'
 
 .PHONY: upload
 
