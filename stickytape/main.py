@@ -17,9 +17,9 @@ def main():
 
 def _open_output(args):
     if args.output_file is None:
-        return sys.stdout
+        return sys.stdout.buffer
     else:
-        return open(args.output_file, "w")
+        return open(args.output_file, "wb")
 
 def _parse_args():
     parser = argparse.ArgumentParser()

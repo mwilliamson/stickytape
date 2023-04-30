@@ -1,6 +1,10 @@
 import ast
 import os.path
+import io
+import shutil
 import subprocess
+import tempfile
+import zipapp
 
 from .stdlib import is_stdlib_module
 
@@ -20,18 +24,34 @@ def script(
 
     python_paths = [os.path.dirname(path)] + add_python_paths + _read_sys_path_from_python_bin(python_binary)
 
-    output = []
+    with tempfile.TemporaryDirectory() as archive_dir:
+        shutil.copyfile(path, os.path.join(archive_dir, "__main__.py"))
+        generator = ModuleWriterGenerator(sys_path=python_paths)
+        generator.generate_for_file(path, add_python_modules=add_python_modules)
+        for module in generator._modules.values():
+            make_package(archive_dir=archive_dir, module=module)
+            archive_module_path = os.path.join(archive_dir, module.relative_path)
+            shutil.copyfile(module.absolute_path, archive_module_path)
 
-    output.append(_generate_shebang(path, copy=copy_shebang))
-    output.append(_prelude())
-    output.append(_generate_module_writers(
-        path,
-        sys_path=python_paths,
-        add_python_modules=add_python_modules,
-    ))
-    with _open_source_file(path) as source_file:
-        output.append(_indent(source_file.read()))
-    return "".join(output)
+        output = io.BytesIO()
+        zipapp.create_archive(
+            source=archive_dir,
+            target=output,
+            interpreter=_generate_interpreter(path, copy=copy_shebang),
+        )
+        return output.getvalue()
+
+
+def make_package(archive_dir, module):
+    parts = os.path.dirname(module.relative_path).split("/")
+    partial_path = archive_dir
+    for part in parts:
+        partial_path = os.path.join(partial_path, part)
+        if not os.path.exists(partial_path):
+            os.mkdir(partial_path)
+            with open(os.path.join(partial_path, "__init__.py"), "wb") as f:
+                f.write(b"\n")
+
 
 def _read_sys_path_from_python_bin(binary_path):
     if binary_path is None:
@@ -47,41 +67,21 @@ def _read_sys_path_from_python_bin(binary_path):
             if line.strip()
         ]
 
-def _indent(string):
-    return "    " + string.replace("\n", "\n    ")
 
-def _generate_shebang(path, copy):
+def _generate_interpreter(path, copy):
     if copy:
         with _open_source_file(path) as script_file:
             first_line = script_file.readline()
             if first_line.startswith("#!"):
-                return first_line
+                return first_line[2:]
 
-    return "#!/usr/bin/env python"
+    return "/usr/bin/env python"
 
-def _prelude():
-    prelude_path = os.path.join(os.path.dirname(__file__), "prelude.py")
-    with open(prelude_path, encoding="utf-8") as prelude_file:
-        return prelude_file.read()
-
-def _generate_module_writers(path, sys_path, add_python_modules):
-    generator = ModuleWriterGenerator(sys_path)
-    generator.generate_for_file(path, add_python_modules=add_python_modules)
-    return generator.build()
 
 class ModuleWriterGenerator(object):
     def __init__(self, sys_path):
         self._sys_path = sys_path
         self._modules = {}
-
-    def build(self):
-        output = []
-        for module_path, module_source in self._modules.values():
-            output.append("    __stickytape_write_module({0}, {1})\n".format(
-                repr(module_path),
-                repr(module_source)
-            ))
-        return "".join(output)
 
     def generate_for_file(self, python_file_path, add_python_modules):
         self._generate_for_module(ImportTarget(python_file_path, relative_path=None, is_package=False, module_name=None))
@@ -101,7 +101,7 @@ class ModuleWriterGenerator(object):
 
         for import_target in import_targets:
             if import_target.module_name not in self._modules:
-                self._modules[import_target.module_name] = (import_target.relative_path, import_target.read_binary())
+                self._modules[import_target.module_name] = import_target
                 self._generate_for_module(import_target)
 
     def _read_possible_import_targets(self, python_module, import_line):
@@ -198,9 +198,6 @@ class ImportTarget(object):
         self.relative_path = relative_path
         self.is_package = is_package
         self.module_name = module_name
-
-    def read_binary(self):
-        return _read_binary(self.absolute_path)
 
 class ImportLine(object):
     def __init__(self, module_name, items):
