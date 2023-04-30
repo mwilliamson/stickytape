@@ -15,7 +15,7 @@ setup(
     author_email='mike@zwobble.org',
     url='http://github.com/mwilliamson/stickytape',
     packages=['stickytape'],
-    python_requires='>=3.4',
+    python_requires='>=3.5',
     license="BSD-2-Clause",
     entry_points={
         "console_scripts": [
