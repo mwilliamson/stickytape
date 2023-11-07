@@ -1,5 +1,6 @@
 import ast
 import os.path
+import re
 import subprocess
 
 from .stdlib import is_stdlib_module
@@ -21,6 +22,7 @@ def script(
     python_paths = [os.path.dirname(path)] + add_python_paths + _read_sys_path_from_python_bin(python_binary)
 
     output = []
+    future_stmt = None
 
     output.append(_generate_shebang(path, copy=copy_shebang))
     output.append(_prelude())
@@ -30,7 +32,24 @@ def script(
         add_python_modules=add_python_modules,
     ))
     with _open_source_file(path) as source_file:
-        output.append(_indent(source_file.read()))
+        all_lines = iter(source_file.readlines())
+
+        # Get first nonempty line
+        for line in all_lines:
+            if line != "\n":
+                if re.match("from __future__ import", line):
+                    future_stmt = '\n' + line
+                else:
+                    output.append(_indent_line(line))
+                break
+
+        # Get the rest of the lines
+        for line in all_lines:
+            output.append(_indent_line(line))
+
+        if future_stmt:
+            output = output[:1] + [future_stmt] + output[1:]
+
     return "".join(output)
 
 def _read_sys_path_from_python_bin(binary_path):
@@ -47,8 +66,8 @@ def _read_sys_path_from_python_bin(binary_path):
             if line.strip()
         ]
 
-def _indent(string):
-    return "    " + string.replace("\n", "\n    ")
+def _indent_line(string):
+    return "    " + string
 
 def _generate_shebang(path, copy):
     if copy:
